@@ -5,41 +5,74 @@ import { useState, useEffect } from 'react';
 
 const STATUSES = ['Applied', 'Interview', 'Offer', 'Rejected'];
 
-export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
+export default function JobModal({
+  isOpen = false,
+  onClose = () => {},
+  onSubmit = () => {},
+  job = null,
+  title = 'Add Job',
+}) {
   const [formData, setFormData] = useState({
     company: '',
     role: '',
     location: '',
     date: new Date().toISOString().split('T')[0],
     status: 'Applied',
+    tags: [],
+    notes: '',
   });
+
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (job) {
       setFormData({
-        company: job.company,
-        role: job.role,
-        location: job.location,
-        date: job.date,
-        status: job.status,
+        company: job.company || '',
+        role: job.role || '',
+        location: job.location || '',
+        date: job.date || new Date().toISOString().split('T')[0],
+        status: job.status || 'Applied',
+        tags: job.tags || [],
+        notes: job.notes || '',
       });
     }
   }, [job]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const trimmedTags = formData.tags.map((tag) => tag.trim()).filter(Boolean);
+    onSubmit({ ...formData, tags: trimmedTags });
+
+    // Reset form
     setFormData({
       company: '',
       role: '',
       location: '',
       date: new Date().toISOString().split('T')[0],
       status: 'Applied',
+      tags: [],
+      notes: '',
+    });
+    setTagInput('');
+  };
+
+  const addTag = () => {
+    const trimmed = tagInput.trim();
+    if (trimmed && !formData.tags.includes(trimmed)) {
+      setFormData({ ...formData, tags: [...formData.tags, trimmed] });
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((tag) => tag !== tagToRemove),
     });
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+    <Dialog open={!!isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel
@@ -60,7 +93,6 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Company */}
             <div>
               <label className="block text-sm font-medium mb-1">Company</label>
               <input
@@ -72,7 +104,6 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
               />
             </div>
 
-            {/* Role */}
             <div>
               <label className="block text-sm font-medium mb-1">Role</label>
               <input
@@ -84,7 +115,6 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
               />
             </div>
 
-            {/* Location */}
             <div>
               <label className="block text-sm font-medium mb-1">Location</label>
               <input
@@ -96,7 +126,6 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
               />
             </div>
 
-            {/* Date */}
             <div>
               <label className="block text-sm font-medium mb-1">Date Applied</label>
               <input
@@ -108,7 +137,6 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
               />
             </div>
 
-            {/* Status */}
             <div>
               <label className="block text-sm font-medium mb-1">Status</label>
               <select
@@ -116,7 +144,7 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-3 py-2 bg-background border rounded-lg"
               >
-                {STATUSES.map(status => (
+                {STATUSES.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
@@ -124,7 +152,60 @@ export default function JobModal({ isOpen, onClose, onSubmit, job, title }) {
               </select>
             </div>
 
-            {/* Actions */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Hashtags</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addTag();
+                    }
+                  }}
+                  placeholder="Type and press enter"
+                  className="flex-1 px-3 py-2 bg-background border rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={addTag}
+                  className="px-3 py-2 bg-primary text-primary-foreground rounded-lg"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm flex items-center gap-1"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="text-xs ml-1"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={3}
+                placeholder="Write notes about this job..."
+                className="w-full px-3 py-2 bg-background border rounded-lg"
+              />
+            </div>
+
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"

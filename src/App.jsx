@@ -62,36 +62,36 @@ function App() {
     });
 
   const handleAddJob = (job) => {
-    const newJobs = addJob(job);
-    setJobs(newJobs);
-    setIsModalOpen(false);
-    setEditingJob(null);
+    const newJobs = addJob(job); // Add job to storage
+    setJobs(newJobs); // Update local state
+    setIsModalOpen(false); // Close modal
+    setEditingJob(null); // Clear editing job
   };
 
   const handleUpdateJob = (jobId, updates) => {
-    const newJobs = updateJob(jobId, updates);
-    setJobs(newJobs);
+    const newJobs = updateJob(jobId, updates); // Update job in storage
+    setJobs(newJobs); // Update local state
   };
 
   const handleDeleteJob = (jobId) => {
-    const newJobs = deleteJob(jobId);
-    setJobs(newJobs);
+    const newJobs = deleteJob(jobId); // Delete job from storage
+    setJobs(newJobs); // Update local state
   };
 
   const handleEditJob = (job) => {
-    setEditingJob(job);
-    setIsModalOpen(true);
+    setEditingJob(job); // Set the job to be edited
+    setIsModalOpen(true); // Open modal
   };
 
   const handleLogout = async () => {
-    await auth.signOut();
-    setUser(null);
+    await auth.signOut(); // Sign out user
+    setUser(null); // Clear user state
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      setIsSignInModalOpen(false);
+      await signInWithGoogle(); // Sign in with Google
+      setIsSignInModalOpen(false); // Close sign-in modal
     } catch (error) {
       console.error('Google sign-in failed:', error);
     }
@@ -99,8 +99,8 @@ function App() {
 
   const handleGithubSignIn = async () => {
     try {
-      await signInWithGitHub();
-      setIsSignInModalOpen(false);
+      await signInWithGitHub(); // Sign in with GitHub
+      setIsSignInModalOpen(false); // Close sign-in modal
     } catch (error) {
       console.error('GitHub sign-in failed:', error);
     }
@@ -118,7 +118,7 @@ function App() {
       <main className="max-w-7xl mx-auto px-6 py-24">
         <Dashboard jobs={jobs} />
 
-        <div className="flex items-center gap-4 mb-8 justify-start">
+        <div className="flex items-center gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60" size={20} />
             <input
@@ -141,6 +141,21 @@ function App() {
               </option>
             ))}
           </select>
+
+          <div className="flex rounded-lg border bg-card">
+            <button
+              onClick={() => setView('kanban')}
+              className={`p-2 ${view === 'kanban' ? 'bg-primary text-primary-foreground' : 'hover:bg-foreground/5'} rounded-l-lg`}
+            >
+              <LayoutGrid size={20} />
+            </button>
+            <button
+              onClick={() => setView('timeline')}
+              className={`p-2 ${view === 'timeline' ? 'bg-primary text-primary-foreground' : 'hover:bg-foreground/5'} rounded-r-lg`}
+            >
+              <Clock size={20} />
+            </button>
+          </div>
 
           {user && (
             <button
@@ -208,7 +223,7 @@ function App() {
         }}
         onSubmit={handleAddJob}
         job={editingJob}
-        title={editingJob ? "Modify Job" : "Add Job"} // Dynamic title for Add/Edit
+        title={editingJob ? "Edit Job" : "Add Job"} // Dynamic title for Add/Edit
       />
 
       <SignInModal

@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { addFeedback } from '../lib/store';
 
-export default function FeedbackModal({ isOpen, onClose, jobId }) {
+export default function FeedbackModal({ isOpen = false, onClose, jobId }) {
   const [feedback, setFeedback] = useState({
     text: '',
     learnings: '',
@@ -21,13 +21,11 @@ export default function FeedbackModal({ isOpen, onClose, jobId }) {
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="relative z-50"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      {/* Background overlay */}
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" aria-hidden="true" />
-      
+
+      {/* Centered modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel
           as={motion.div}
@@ -37,22 +35,15 @@ export default function FeedbackModal({ isOpen, onClose, jobId }) {
           className="w-full max-w-md bg-card rounded-xl shadow-lg p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <Dialog.Title className="text-xl font-semibold">
-              Capture Feedback
-            </Dialog.Title>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-lg hover:bg-foreground/10"
-            >
+            <Dialog.Title className="text-xl font-semibold">Capture Feedback</Dialog.Title>
+            <button onClick={onClose} className="p-1 rounded-lg hover:bg-foreground/10">
               <X size={20} />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
-                What feedback did you receive?
-              </label>
+              <label className="block text-sm font-medium mb-1">What feedback did you receive?</label>
               <textarea
                 value={feedback.text}
                 onChange={(e) => setFeedback({ ...feedback, text: e.target.value })}
@@ -62,9 +53,7 @@ export default function FeedbackModal({ isOpen, onClose, jobId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                What did you learn from this experience?
-              </label>
+              <label className="block text-sm font-medium mb-1">What did you learn from this experience?</label>
               <textarea
                 value={feedback.learnings}
                 onChange={(e) => setFeedback({ ...feedback, learnings: e.target.value })}
@@ -74,9 +63,7 @@ export default function FeedbackModal({ isOpen, onClose, jobId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Would you like to write a thank you note?
-              </label>
+              <label className="block text-sm font-medium mb-1">Would you like to write a thank you note?</label>
               <textarea
                 value={feedback.thankYouNote}
                 onChange={(e) => setFeedback({ ...feedback, thankYouNote: e.target.value })}
