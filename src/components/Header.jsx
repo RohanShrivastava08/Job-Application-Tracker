@@ -1,36 +1,35 @@
 import { motion } from 'framer-motion';
 import { Sun, Moon, Github, Linkedin } from 'lucide-react';
-import { useState } from 'react';
-import { signInWithPopup, GithubAuthProvider, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase/firebase'; // adjust path as needed
+import { useState, useEffect } from 'react';
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import toast from 'react-hot-toast';
 import SignInModal from './SignInModal';
 
 export default function Header({ isDark, onThemeToggle }) {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const auth = getAuth();
 
-  const handleGetStartedClick = () => {
-    setIsSignInModalOpen(true);
+  const handleGetStartedClick = () => setIsSignInModalOpen(true);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    toast.success("Logged out successfully");
+    setUser(null);
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      setIsSignInModalOpen(false);
-    } catch (error) {
-      console.error("Google sign-in failed:", error);
-    }
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        toast.success("Logged in successfully");
+      } else {
+        setUser(null);
+      }
+    });
 
-  const handleGithubSignIn = async () => {
-    try {
-      const provider = new GithubAuthProvider();
-      await signInWithPopup(auth, provider);
-      setIsSignInModalOpen(false);
-    } catch (error) {
-      console.error("GitHub sign-in failed:", error);
-    }
-  };
+    return () => unsubscribe();
+  }, []);
 
   return (
     <>
@@ -40,6 +39,7 @@ export default function Header({ isDark, onThemeToggle }) {
         className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-50"
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo and Title */}
           <div className="flex items-center gap-2">
             <motion.div
               initial={{ scale: 0 }}
@@ -51,6 +51,7 @@ export default function Header({ isDark, onThemeToggle }) {
             <h1 className="text-xl font-semibold text-foreground">Job Tracker</h1>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center gap-4">
             <a
               href="https://github.com/RohanShrivastava08"
@@ -61,6 +62,7 @@ export default function Header({ isDark, onThemeToggle }) {
             >
               <Github size={20} className="text-foreground" />
             </a>
+
             <a
               href="https://www.linkedin.com/in/rohan-shrivastava-887a15251/"
               target="_blank"
@@ -70,6 +72,7 @@ export default function Header({ isDark, onThemeToggle }) {
             >
               <Linkedin size={20} className="text-foreground" />
             </a>
+
             <button
               onClick={onThemeToggle}
               className="p-2 rounded-lg hover:bg-card transition-colors"
@@ -78,12 +81,21 @@ export default function Header({ isDark, onThemeToggle }) {
               {isDark ? <Sun size={20} className="text-foreground" /> : <Moon size={20} className="text-black" />}
             </button>
 
-            <button
-              onClick={handleGetStartedClick}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors"
-            >
-              Get Started
-            </button>
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={handleGetStartedClick}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors"
+              >
+                Get Started
+              </button>
+            )}
           </div>
         </div>
       </motion.header>
@@ -91,8 +103,13 @@ export default function Header({ isDark, onThemeToggle }) {
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
-        onGoogleSignIn={handleGoogleSignIn}
-        onGithubSignIn={handleGithubSignIn}
+        onGoogleSignIn={() => {
+          setIsSignInModalOpen(false);
+        }}
+        onGithubSignIn={() => {
+          setIsSignInModalOpen(false);
+        }}
+        isDark={isDark}
       />
     </>
   );
