@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import toast from 'react-hot-toast';
 import SignInModal from './SignInModal';
+import { signInWithGoogle, signInWithGitHub } from '../firebase/firebase';
 
 export default function Header({ isDark, onThemeToggle }) {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
@@ -14,26 +15,56 @@ export default function Header({ isDark, onThemeToggle }) {
 
   const handleLogout = async () => {
     await signOut(auth);
-    toast.success("Logged out successfully");
+    toast.success("Logged out successfully", {
+      icon: '👋',
+      position: 'top-center',
+      style: { background: '#f44336', color: 'white' }
+    });
     setUser(null);
   };
 
+  const handleGoogleSignIn = async () => {
+    const user = await signInWithGoogle();
+    if (user) {
+      setIsSignInModalOpen(false);
+      setUser(user);
+      toast.success("Logged in successfully 🎉", {
+        icon: '🎉',
+        position: 'top-center',
+        style: { background: '#4caf50', color: 'white' }
+      });
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    const user = await signInWithGitHub();
+    if (user) {
+      setIsSignInModalOpen(false);
+      setUser(user);
+      toast.success("🎉 Logged in successfully", {
+        icon: '🎉',
+        position: 'top-center',
+        style: { background: '#24292f', color: 'white' }
+      });
+    }
+  };
+
   useEffect(() => {
+    // Only handle authentication state changes, not showing toast here
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setUser(currentUser);
-        toast.success("Logged in successfully");
+        setUser(currentUser); // No need for the toast here anymore
       } else {
         setUser(null);
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   return (
     <>
-      <motion.header 
+      <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-50"
@@ -91,7 +122,7 @@ export default function Header({ isDark, onThemeToggle }) {
             ) : (
               <button
                 onClick={handleGetStartedClick}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors"
+                className={`px-4 py-2 ${isDark ? 'bg-white text-black' : 'bg-primary text-primary-foreground'} rounded-lg hover:opacity-90 transition-colors`}
               >
                 Get Started
               </button>
@@ -103,12 +134,8 @@ export default function Header({ isDark, onThemeToggle }) {
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
-        onGoogleSignIn={() => {
-          setIsSignInModalOpen(false);
-        }}
-        onGithubSignIn={() => {
-          setIsSignInModalOpen(false);
-        }}
+        onGoogleSignIn={handleGoogleSignIn}
+        onGithubSignIn={handleGitHubSignIn}
         isDark={isDark}
       />
     </>
