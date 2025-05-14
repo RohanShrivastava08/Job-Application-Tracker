@@ -62,36 +62,36 @@ function App() {
     });
 
   const handleAddJob = (job) => {
-    const newJobs = addJob(job);
-    setJobs(newJobs);
-    setIsModalOpen(false);
-    setEditingJob(null);
+    const newJobs = addJob(job); // Add job to storage
+    setJobs(newJobs); // Update local state
+    setIsModalOpen(false); // Close modal
+    setEditingJob(null); // Clear editing job
   };
 
   const handleUpdateJob = (jobId, updates) => {
-    const newJobs = updateJob(jobId, updates);
-    setJobs(newJobs);
+    const newJobs = updateJob(jobId, updates); // Update job in storage
+    setJobs(newJobs); // Update local state
   };
 
   const handleDeleteJob = (jobId) => {
-    const newJobs = deleteJob(jobId);
-    setJobs(newJobs);
+    const newJobs = deleteJob(jobId); // Delete job from storage
+    setJobs(newJobs); // Update local state
   };
 
   const handleEditJob = (job) => {
-    setEditingJob(job);
-    setIsModalOpen(true);
+    setEditingJob(job); // Set the job to be edited
+    setIsModalOpen(true); // Open modal
   };
 
   const handleLogout = async () => {
-    await auth.signOut();
-    setUser(null);
+    await auth.signOut(); // Sign out user
+    setUser(null); // Clear user state
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      setIsSignInModalOpen(false);
+      await signInWithGoogle(); // Sign in with Google
+      setIsSignInModalOpen(false); // Close sign-in modal
     } catch (error) {
       console.error('Google sign-in failed:', error);
     }
@@ -99,8 +99,8 @@ function App() {
 
   const handleGithubSignIn = async () => {
     try {
-      await signInWithGitHub();
-      setIsSignInModalOpen(false);
+      await signInWithGitHub(); // Sign in with GitHub
+      setIsSignInModalOpen(false); // Close sign-in modal
     } catch (error) {
       console.error('GitHub sign-in failed:', error);
     }
@@ -126,7 +126,7 @@ function App() {
               placeholder="Search jobs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-1/4 pl-10 pr-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -156,6 +156,15 @@ function App() {
               <Clock size={20} />
             </button>
           </div>
+
+          {user && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors"
+            >
+              Add Job
+            </button>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
@@ -184,6 +193,7 @@ function App() {
                               onStatusChange={handleUpdateJob}
                               onDelete={handleDeleteJob}
                               onEdit={handleEditJob}
+                              onClose={() => handleDeleteJob(job.id)} // Close card handler
                             />
                           ))
                       )}
@@ -213,6 +223,7 @@ function App() {
         }}
         onSubmit={handleAddJob}
         job={editingJob}
+        title={editingJob ? "Edit Job" : "Add Job"} // Dynamic title for Add/Edit
       />
 
       <SignInModal
