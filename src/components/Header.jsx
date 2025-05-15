@@ -72,15 +72,15 @@ export default function Header({ isDark, onThemeToggle }) {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center gap-2">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
-            >
-              <span className="text-primary-foreground font-semibold">JT</span>
-            </motion.div>
-            <h1 className="text-xl font-semibold text-foreground">Job Tracker</h1>
-          </div>
+  <motion.div
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
+  >
+    <span className="text-primary-foreground font-semibold">JAT</span>
+  </motion.div>
+  <h1 className="text-xl font-semibold text-foreground">Job Application Tracker</h1>
+</div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4">

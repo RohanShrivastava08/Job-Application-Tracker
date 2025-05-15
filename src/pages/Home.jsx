@@ -81,7 +81,7 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="text-center space-y-6 mb-20"
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground">Welcome to Job Tracker</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground">Welcome to Job Application Tracker</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Simplify your job search journey. Track all your applications, interviews, and offers in one place.
         </p>
