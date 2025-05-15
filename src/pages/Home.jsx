@@ -9,15 +9,6 @@ const features = [
   { title: 'Add Notes & Hashtags', description: 'Customize each job card with personal notes and hashtags to stay organized.' },
 ];
 
-const featuresWithIcons = [
-  { title: 'Application Tracking', description: 'Keep all your job applications organized and updated.', icon: '🗂️' },
-  { title: 'Kanban & Timeline', description: 'Visualize your workflow with intuitive Kanban and timeline views.', icon: '📅' },
-  { title: 'Notes & Hashtags', description: 'Add personalized notes and hashtags to each job for easy filtering.', icon: '📝' },
-  { title: 'Progress Notifications', description: 'Get notified about upcoming interviews and deadlines.', icon: '🔔' },
-  { title: 'Secure Sign-In', description: 'Authenticate securely using Google or GitHub accounts.', icon: '🔐' },
-  { title: 'Data Backup', description: 'All your data is backed up and securely stored with Firebase.', icon: '☁️' },
-];
-
 const faqs = [
   { question: 'How does Job Tracker work?', answer: 'Sign in, start adding jobs, and organize them by stage. Update status as you move forward!' },
   { question: 'Do I need an account?', answer: 'Yes, simply sign in with Google or GitHub to securely track your applications.' },
@@ -100,7 +91,7 @@ export default function Home() {
         </motion.button>
       </motion.section>
 
-      {/* Features Section (3 cards) */}
+      {/* Features Section */}
       <section className="grid md:grid-cols-3 gap-8 mb-28">
         {features.map((feature, i) => (
           <motion.div
@@ -132,27 +123,6 @@ export default function Home() {
             >
               <div className="absolute left-[-36px] top-1 w-4 h-4 rounded-full bg-primary" />
               <p className="text-lg">{step}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* New Features with Icons Section */}
-      <section className="mb-28">
-        <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {featuresWithIcons.map(({ icon, title, description }, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              className="bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-2xl p-6 flex flex-col items-center text-center shadow-lg hover:shadow-xl transition-shadow cursor-default"
-            >
-              <div className="text-5xl mb-4">{icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{title}</h3>
-              <p className="text-muted-foreground">{description}</p>
             </motion.div>
           ))}
         </div>
@@ -191,28 +161,64 @@ export default function Home() {
               viewport={{ once: true }}
               className="bg-card border p-6 rounded-xl shadow-md text-center"
             >
-              <img
-                src={t.avatar}
-                alt={t.name}
-                className="mx-auto w-20 h-20 rounded-full mb-4 object-cover"
-                loading="lazy"
-              />
-              <blockquote className="italic text-lg">"{t.quote}"</blockquote>
-              <p className="mt-4 font-semibold">{t.name}</p>
-              <p className="text-muted-foreground">{t.title}</p>
+              <img src={t.avatar} alt={t.name} className="w-16 h-16 rounded-full mx-auto mb-4 object-cover" />
+              <p className="text-muted-foreground mb-2 italic">“{t.quote}”</p>
+              <h4 className="font-semibold">{t.name}</h4>
+              <span className="text-sm text-muted-foreground">{t.title}</span>
             </motion.div>
           ))}
         </div>
       </section>
 
+      {/* Newsletter/Blog Preview */}
+      <section className="mb-28 text-center max-w-3xl mx-auto">
+        <h2 className="text-3xl font-bold mb-4">Get Tips & Insights</h2>
+        <p className="text-muted-foreground mb-6">
+          Subscribe to our blog for job search tips, portfolio hacks, and growth strategies.
+        </p>
+        <div className="flex justify-center">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            className="px-4 py-3 rounded-l-lg border border-gray-300 dark:border-gray-600 outline-none w-2/3 max-w-xs"
+          />
+          <button className="px-4 py-3 bg-white text-black rounded-r-lg hover:opacity-90 transition">
+            Subscribe
+          </button>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <motion.section
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3 }}
+        className="text-center mb-24 bg-primary text-primary-foreground p-10 rounded-xl"
+      >
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to take control of your job hunt?</h2>
+        <p className="mb-6">Start tracking applications, interviews, and offers with ease.</p>
+        <motion.button
+  onClick={handleGetStarted}
+  whileTap={{ scale: 0.95 }}
+  className="px-6 py-3 rounded-lg border
+             bg-white text-black border-black
+             dark:bg-black dark:text-white dark:border-white
+             hover:opacity-90 transition"
+>
+  Get Started
+</motion.button>
+
+      </motion.section>
+
       {/* Sign In Modal */}
-      {isSignInModalOpen && (
-        <SignInModal
-          onClose={() => setIsSignInModalOpen(false)}
-          onGoogleSignIn={handleGoogleSignIn}
-          onGitHubSignIn={handleGitHubSignIn}
-        />
-      )}
+      <SignInModal
+        isOpen={isSignInModalOpen}
+        onClose={() => setIsSignInModalOpen(false)}
+        onGoogleSignIn={handleGoogleSignIn}
+        onGithubSignIn={handleGitHubSignIn}
+        isDark={isDark}
+      />
     </div>
   );
 }
