@@ -16,7 +16,7 @@ export default function JobModal({
     company: '',
     role: '',
     location: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     status: 'Applied',
     tags: [],
     notes: '',
@@ -24,6 +24,7 @@ export default function JobModal({
 
   const [tagInput, setTagInput] = useState('');
 
+  // Load job data into form when editing
   useEffect(() => {
     if (job) {
       setFormData({
@@ -32,43 +33,78 @@ export default function JobModal({
         location: job.location || '',
         date: job.date || new Date().toISOString().split('T')[0],
         status: job.status || 'Applied',
-        tags: job.tags || [],
+        tags: Array.isArray(job.tags) ? job.tags : [],
         notes: job.notes || '',
       });
+    } else {
+      // Clear form if no job (add mode)
+      setFormData({
+        company: '',
+        role: '',
+        location: '',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Applied',
+        tags: [],
+        notes: '',
+      });
+      setTagInput('');
     }
   }, [job]);
 
+  // Helper to trim and normalize tags
+  const normalizeTags = (tags) => {
+    return tags
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const trimmedTags = formData.tags.map((tag) => tag.trim()).filter(Boolean);
-    onSubmit({ ...formData, tags: trimmedTags });
 
-    // Reset form
-    setFormData({
-      company: '',
-      role: '',
-      location: '',
-      date: new Date().toISOString().split('T')[0],
-      status: 'Applied',
-      tags: [],
-      notes: '',
-    });
-    setTagInput('');
+    // Prepare data for Firebase - trim all strings
+    const preparedData = {
+      company: formData.company.trim(),
+      role: formData.role.trim(),
+      location: formData.location.trim(),
+      date: formData.date, // should be YYYY-MM-DD string, suitable for Firestore
+      status: formData.status,
+      tags: normalizeTags(formData.tags),
+      notes: formData.notes.trim(),
+    };
+
+    onSubmit(preparedData);
+
+    // Reset form after submit (only if adding new job)
+    if (!job) {
+      setFormData({
+        company: '',
+        role: '',
+        location: '',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Applied',
+        tags: [],
+        notes: '',
+      });
+      setTagInput('');
+    }
   };
 
   const addTag = () => {
     const trimmed = tagInput.trim();
     if (trimmed && !formData.tags.includes(trimmed)) {
-      setFormData({ ...formData, tags: [...formData.tags, trimmed] });
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, trimmed],
+      }));
       setTagInput('');
     }
   };
 
   const removeTag = (tagToRemove) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter((tag) => tag !== tagToRemove),
-    });
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
   };
 
   return (
@@ -87,6 +123,7 @@ export default function JobModal({
             <button
               onClick={onClose}
               className="p-1 rounded-lg hover:bg-foreground/10"
+              aria-label="Close"
             >
               <X size={20} />
             </button>
@@ -94,19 +131,27 @@ export default function JobModal({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Company</label>
+              <label htmlFor="company" className="block text-sm font-medium mb-1">
+                Company
+              </label>
               <input
+                id="company"
                 type="text"
                 required
                 value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, company: e.target.value })
+                }
                 className="w-full px-3 py-2 bg-background border rounded-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Role</label>
+              <label htmlFor="role" className="block text-sm font-medium mb-1">
+                Role
+              </label>
               <input
+                id="role"
                 type="text"
                 required
                 value={formData.role}
@@ -116,19 +161,27 @@ export default function JobModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Location</label>
+              <label htmlFor="location" className="block text-sm font-medium mb-1">
+                Location
+              </label>
               <input
+                id="location"
                 type="text"
                 required
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
                 className="w-full px-3 py-2 bg-background border rounded-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Date Applied</label>
+              <label htmlFor="date" className="block text-sm font-medium mb-1">
+                Date Applied
+              </label>
               <input
+                id="date"
                 type="date"
                 required
                 value={formData.date}
@@ -138,8 +191,11 @@ export default function JobModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Status</label>
+              <label htmlFor="status" className="block text-sm font-medium mb-1">
+                Status
+              </label>
               <select
+                id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-3 py-2 bg-background border rounded-lg"
@@ -187,6 +243,7 @@ export default function JobModal({
                       type="button"
                       onClick={() => removeTag(tag)}
                       className="text-xs ml-1"
+                      aria-label={`Remove tag ${tag}`}
                     >
                       ×
                     </button>
@@ -196,8 +253,11 @@ export default function JobModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Notes</label>
+              <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                Notes
+              </label>
               <textarea
+                id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}

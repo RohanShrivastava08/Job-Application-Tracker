@@ -5,10 +5,21 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
 
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+} from 'firebase/firestore';
+
+// 🔐 Firebase Config
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -19,19 +30,22 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// 🚀 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 
+// 🔑 Auth Providers
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
+// 👉 Sign In Methods
 export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (error) {
-    console.error('Error during Google Sign-in:', error);
+    console.error('Error during Google sign-in:', error);
     throw error;
   }
 };
@@ -41,25 +55,52 @@ export const signInWithGitHub = async () => {
     const result = await signInWithPopup(auth, githubProvider);
     return result.user;
   } catch (error) {
-    console.error('Error during GitHub Sign-in:', error);
+    console.error('Error during GitHub sign-in:', error);
     throw error;
   }
 };
 
-// Function to save job data for the logged-in user
-export const saveJobToFirestore = async (jobData) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('User not logged in');
-
+// 🔓 Sign Out
+export const signOutUser = async () => {
   try {
-    const userJobsRef = collection(firestore, 'users', user.uid, 'jobs');
-    const newJobDoc = doc(userJobsRef); // generates a new doc with random ID
-    await setDoc(newJobDoc, jobData);
-    console.log('Job saved successfully');
+    await signOut(auth);
+    console.log('Sign-out successful');
   } catch (error) {
-    console.error('Error saving job:', error);
-    throw error;
+    console.error('Error during sign-out:', error);
   }
 };
 
-export { auth, firestore, onAuthStateChanged, signOut };
+// 📁 Firestore Helper Functions
+
+// 🔄 Get all jobs for user
+export const getJobs = async (uid) => {
+  const jobsRef = collection(firestore, 'users', uid, 'jobs');
+  const snapshot = await getDocs(jobsRef);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+// ➕ Add a new job
+export const addJob = async (uid, jobData) => {
+  const jobsRef = collection(firestore, 'users', uid, 'jobs');
+  await addDoc(jobsRef, {
+    ...jobData,
+    createdAt: new Date().toISOString(),
+  });
+  return getJobs(uid);
+};
+
+// ✏️ Update existing job
+export const updateJob = async (uid, jobId, updates) => {
+  const jobRef = doc(firestore, 'users', uid, 'jobs', jobId);
+  await updateDoc(jobRef, updates);
+  return getJobs(uid);
+};
+
+// ❌ Delete a job
+export const deleteJob = async (uid, jobId) => {
+  const jobRef = doc(firestore, 'users', uid, 'jobs', jobId);
+  await deleteDoc(jobRef);
+  return getJobs(uid);
+};
+
+export { auth, firestore, onAuthStateChanged };
