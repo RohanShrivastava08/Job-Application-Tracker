@@ -1,3 +1,4 @@
+// src/firebase/firebase.js
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -7,17 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  addDoc,
-} from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 // 🔐 Firebase Config
 const firebaseConfig = {
@@ -68,39 +59,6 @@ export const signOutUser = async () => {
   } catch (error) {
     console.error('Error during sign-out:', error);
   }
-};
-
-// 📁 Firestore Helper Functions
-
-// 🔄 Get all jobs for user
-export const getJobs = async (uid) => {
-  const jobsRef = collection(firestore, 'users', uid, 'jobs');
-  const snapshot = await getDocs(jobsRef);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-};
-
-// ➕ Add a new job
-export const addJob = async (uid, jobData) => {
-  const jobsRef = collection(firestore, 'users', uid, 'jobs');
-  await addDoc(jobsRef, {
-    ...jobData,
-    createdAt: new Date().toISOString(),
-  });
-  return getJobs(uid);
-};
-
-// ✏️ Update existing job
-export const updateJob = async (uid, jobId, updates) => {
-  const jobRef = doc(firestore, 'users', uid, 'jobs', jobId);
-  await updateDoc(jobRef, updates);
-  return getJobs(uid);
-};
-
-// ❌ Delete a job
-export const deleteJob = async (uid, jobId) => {
-  const jobRef = doc(firestore, 'users', uid, 'jobs', jobId);
-  await deleteDoc(jobRef);
-  return getJobs(uid);
 };
 
 export { auth, firestore, onAuthStateChanged };

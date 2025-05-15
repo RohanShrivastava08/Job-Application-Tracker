@@ -20,6 +20,7 @@ export default function JobModal({
     status: 'Applied',
     tags: [],
     notes: '',
+    feedback: '', // <-- Added feedback here
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -35,6 +36,7 @@ export default function JobModal({
         status: job.status || 'Applied',
         tags: Array.isArray(job.tags) ? job.tags : [],
         notes: job.notes || '',
+        feedback: job.feedback || '', // <-- load feedback if present
       });
     } else {
       // Clear form if no job (add mode)
@@ -46,6 +48,7 @@ export default function JobModal({
         status: 'Applied',
         tags: [],
         notes: '',
+        feedback: '', // reset feedback too
       });
       setTagInput('');
     }
@@ -70,6 +73,7 @@ export default function JobModal({
       status: formData.status,
       tags: normalizeTags(formData.tags),
       notes: formData.notes.trim(),
+      feedback: formData.feedback.trim(), // <-- include feedback here
     };
 
     onSubmit(preparedData);
@@ -84,6 +88,7 @@ export default function JobModal({
         status: 'Applied',
         tags: [],
         notes: '',
+        feedback: '',
       });
       setTagInput('');
     }
@@ -284,6 +289,7 @@ export default function JobModal({
           </form>
         </Dialog.Panel>
       </div>
-    </Dialog>
-  );
+    </
+Dialog>
+);
 }

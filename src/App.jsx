@@ -11,7 +11,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import JobModal from './components/JobModal';
 import JobCard from './components/JobCard';
-import Dashboard from './components/Dashboard';
+import Dashboard from './pages/Dashboard';
 import TimelineView from './components/TimelineView';
 import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
@@ -40,6 +40,10 @@ function App() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Feedback modal state
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackJobId, setFeedbackJobId] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -150,6 +154,11 @@ function App() {
     }
   };
 
+  const handleFeedbackTrigger = (jobId) => {
+    setFeedbackJobId(jobId);
+    setIsFeedbackOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
@@ -254,6 +263,7 @@ function App() {
                                       onStatusChange={handleUpdateJob}
                                       onDelete={handleDeleteJob}
                                       onEdit={handleEditJob}
+                                      onFeedbackTrigger={handleFeedbackTrigger} // ✅ New Prop
                                     />
                                   ))
                                 )}
@@ -296,6 +306,8 @@ function App() {
         onGoogleSignIn={handleGoogleSignIn}
         onGithubSignIn={handleGithubSignIn}
       />
+
+      
     </div>
   );
 }

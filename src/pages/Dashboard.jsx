@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { motion } from 'framer-motion';
 
+
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
 
 export default function Dashboard({ jobs }) {

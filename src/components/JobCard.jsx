@@ -7,12 +7,12 @@ import {
   X,
   Pencil,
   Check,
+  StickyNote,
 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useState } from 'react';
-import FeedbackModal from './FeedbackModal.jsx';
 
 const STATUSES = ['Applied', 'Interview', 'Offer', 'Rejected'];
 
@@ -23,128 +23,171 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
   const handleStatusChange = (newStatus) => {
     onStatusChange(job.id, { status: newStatus });
     if (newStatus === 'Rejected' && !job.feedback) {
+      // Open feedback modal but keep details modal open
       setIsFeedbackOpen(true);
     }
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-card border rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-      onClick={() => setIsDetailsOpen(true)}
-    >
-      <div className="space-y-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium">{job.company}</h3>
-            <p className="text-sm text-foreground/60">{job.role}</p>
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-card border rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+        onClick={() => setIsDetailsOpen(true)}
+      >
+        <div className="space-y-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium">{job.company}</h3>
+              <p className="text-sm text-foreground/60">{job.role}</p>
+            </div>
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(job);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-foreground/10"
+                      aria-label="Edit job"
+                      type="button"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg">
+                      Edit job
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(job.id);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-foreground/10"
+                      aria-label="Delete job"
+                      type="button"
+                    >
+                      <X size={16} />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg">
+                      Delete job
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            </div>
           </div>
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(job);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-foreground/10"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg">
-                    Edit job
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
 
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(job.id);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-foreground/10"
-                  >
-                    <X size={16} />
-                  </button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg">
-                    Delete job
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
+          <div className="flex items-center gap-2 text-sm text-foreground/60">
+            <MapPin size={16} />
+            <span>{job.location}</span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 text-sm text-foreground/60">
-          <MapPin size={16} />
-          <span>{job.location}</span>
-        </div>
+          <div className="flex items-center gap-2 text-sm text-foreground/60">
+            <Calendar size={16} />
+            <span>{format(new Date(job.date), 'MMM d, yyyy')}</span>
+          </div>
 
-        <div className="flex items-center gap-2 text-sm text-foreground/60">
-          <Calendar size={16} />
-          <span>{format(new Date(job.date), 'MMM d, yyyy')}</span>
-        </div>
+          {/* Notes */}
+          {job.notes && (
+            <div className="flex items-start gap-2 text-sm text-foreground/60">
+              <StickyNote size={16} />
+              <span>{job.notes}</span>
+            </div>
+          )}
 
-        <div className="flex items-center gap-2">
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger className="flex items-center justify-between w-full px-3 py-1.5 text-sm rounded-lg hover:bg-foreground/5">
-              {job.status}
-              <ChevronDown size={16} />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                className="min-w-[160px] bg-card rounded-lg border shadow-lg py-1"
-                sideOffset={5}
+          {/* Hashtags */}
+          {Array.isArray(job.hashtags) && job.hashtags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              {job.hashtags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full select-none"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 mt-3">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger
+                className="flex items-center justify-between w-full px-3 py-1.5 text-sm rounded-lg hover:bg-foreground/5"
+                onClick={(e) => e.stopPropagation()} // Prevent dropdown click closing dialog
+                aria-label="Change job status"
+                type="button"
               >
-                {STATUSES.map((status) => (
-                  <DropdownMenu.Item
-                    key={status}
-                    className="px-3 py-2 text-sm outline-none cursor-pointer hover:bg-foreground/5 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(status);
-                    }}
-                  >
-                    {status === job.status && <Check size={16} />}
-                    {status}
-                  </DropdownMenu.Item>
-                ))}
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                {job.status}
+                <ChevronDown size={16} />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className="min-w-[160px] bg-card rounded-lg border shadow-lg py-1"
+                  sideOffset={5}
+                  onClick={(e) => e.stopPropagation()} // Prevent clicks inside dropdown from closing dialog
+                >
+                  {STATUSES.map((status) => (
+                    <DropdownMenu.Item
+                      key={status}
+                      className="px-3 py-2 text-sm outline-none cursor-pointer hover:bg-foreground/5 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(status);
+                      }}
+                      aria-selected={status === job.status}
+                      role="menuitemradio"
+                      tabIndex={-1}
+                    >
+                      {status === job.status && <Check size={16} />}
+                      {status}
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Dialog to show job details */}
+      {/* Dialog for job details */}
       <Dialog.Root open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm" />
           <Dialog.Content
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-card rounded-xl shadow-lg p-6 focus:outline-none"
+            className="fixed top-1/2 left-1/2 max-h-[90vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-card rounded-xl shadow-lg p-6 focus:outline-none"
+            onClick={(e) => e.stopPropagation()} // prevent modal close on internal click
           >
-            {/* Radix UI-native accessibility description */}
-            <Dialog.Description className="sr-only">
-              This dialog shows detailed information about the job at {job.company}, including role, location, status, and any feedback provided.
-            </Dialog.Description>
-
             <div className="space-y-6">
               <div className="flex items-start justify-between">
                 <div>
                   <Dialog.Title className="text-2xl font-semibold">{job.company}</Dialog.Title>
                   <p className="text-lg text-foreground/60">{job.role}</p>
                 </div>
+                <Dialog.Close asChild>
+                  <button
+                    className="text-foreground/60 hover:text-foreground transition"
+                    aria-label="Close job details"
+                    type="button"
+                  >
+                    <X size={24} />
+                  </button>
+                </Dialog.Close>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -180,6 +223,32 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
                 </div>
               </div>
 
+              {/* Notes */}
+              {job.notes && (
+                <div className="space-y-2">
+                  <h3 className="font-medium">Notes</h3>
+                  <p className="text-sm text-foreground/60">{job.notes}</p>
+                </div>
+              )}
+
+              {/* Hashtags */}
+              {Array.isArray(job.hashtags) && job.hashtags.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-medium">Hashtags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {job.hashtags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full select-none"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Feedback */}
               {job.feedback && (
                 <div className="space-y-2">
                   <h3 className="font-medium">Feedback</h3>
@@ -191,6 +260,12 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
                         <p className="text-sm text-foreground/60">{job.feedback.learnings}</p>
                       </div>
                     )}
+                    {job.feedback.thankYouNote && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium">Thank You Note:</p>
+                        <p className="text-sm text-foreground/60">{job.feedback.thankYouNote}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -198,14 +273,6 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
-      {isFeedbackOpen && (
-        <FeedbackModal
-        isOpen={isFeedbackOpen} // ✅ add this line
-        jobId={job.id}
-        onClose={() => setIsFeedbackOpen(false)}
-      />
-      )}
-    </motion.div>
+    </>
   );
 }
