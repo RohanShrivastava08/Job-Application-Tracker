@@ -7,7 +7,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -42,6 +42,22 @@ export const signInWithGitHub = async () => {
     return result.user;
   } catch (error) {
     console.error('Error during GitHub Sign-in:', error);
+    throw error;
+  }
+};
+
+// Function to save job data for the logged-in user
+export const saveJobToFirestore = async (jobData) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not logged in');
+
+  try {
+    const userJobsRef = collection(firestore, 'users', user.uid, 'jobs');
+    const newJobDoc = doc(userJobsRef); // generates a new doc with random ID
+    await setDoc(newJobDoc, jobData);
+    console.log('Job saved successfully');
+  } catch (error) {
+    console.error('Error saving job:', error);
     throw error;
   }
 };
