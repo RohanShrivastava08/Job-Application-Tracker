@@ -199,12 +199,16 @@ export default function Home() {
         <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to take control of your job hunt?</h2>
         <p className="mb-6">Start tracking applications, interviews, and offers with ease.</p>
         <motion.button
-          onClick={handleGetStarted}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 bg-white text-black rounded-lg hover:opacity-90 transition"
-        >
-          Get Started
-        </motion.button>
+  onClick={handleGetStarted}
+  whileTap={{ scale: 0.95 }}
+  className="px-6 py-3 rounded-lg border
+             bg-white text-black border-black
+             dark:bg-black dark:text-white dark:border-white
+             hover:opacity-90 transition"
+>
+  Get Started
+</motion.button>
+
       </motion.section>
 
       {/* Sign In Modal */}
