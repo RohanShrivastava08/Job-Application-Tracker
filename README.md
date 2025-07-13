@@ -1,4 +1,4 @@
-# 🚀📋 Job Application Tracker
+# 📋 Job Application Tracker
 
 ![Screenshot (98)](https://github.com/user-attachments/assets/56ce28c1-981c-41ab-8abb-66e0648838b5)
 
@@ -10,6 +10,7 @@
 - A polished, interactive, and intuitive job application tracking tool built using React, Vite + TypeScript, Tailwind CSS, and Framer Motion.
 
 - This project demonstrates a beautiful, real-world utility interface with delightful animations and smooth drag-and-drop interactions to manage your job hunt like a pro.
+
 
 ## 📋 Table of Contents
 - Introduction
@@ -23,6 +24,7 @@
 - Contributing
 - License
 - Contact
+
 
 ## 📘 Introduction
 
