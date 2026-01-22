@@ -289,7 +289,6 @@ export default function JobModal({
           </form>
         </Dialog.Panel>
       </div>
-    </
-Dialog>
+    </Dialog>
 );
 }
