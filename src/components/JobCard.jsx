@@ -14,7 +14,10 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
-const STATUSES = ['Applied', 'Interview', 'Offer', 'Rejected'];
+/**
+ * Centralized job lifecycle statuses
+ */
+const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected'];
 
 export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -22,10 +25,22 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
 
   const handleStatusChange = (newStatus) => {
     onStatusChange(job.id, { status: newStatus });
+
     if (newStatus === 'Rejected' && !job.feedback) {
       setIsFeedbackOpen(true);
     }
   };
+
+  const statusBadgeClass =
+    job.status === 'Offer'
+      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      : job.status === 'Interview'
+      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      : job.status === 'Applied'
+      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      : job.status === 'Wishlist'
+      ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
 
   return (
     <>
@@ -47,7 +62,7 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
             </div>
 
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              {/* Edit Button */}
+              {/* Edit */}
               <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
@@ -63,18 +78,16 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
                       <Pencil size={16} />
                     </button>
                   </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg"
-                      side="top"
-                    >
-                      Edit Job
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
+                  <Tooltip.Content
+                    className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg"
+                    side="top"
+                  >
+                    Edit Job
+                  </Tooltip.Content>
                 </Tooltip.Root>
               </Tooltip.Provider>
 
-              {/* Delete Button */}
+              {/* Delete */}
               <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
@@ -90,14 +103,12 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
                       <X size={16} />
                     </button>
                   </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg"
-                      side="top"
-                    >
-                      Delete Job
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
+                  <Tooltip.Content
+                    className="bg-card px-3 py-1.5 text-sm rounded-lg shadow-lg"
+                    side="top"
+                  >
+                    Delete Job
+                  </Tooltip.Content>
                 </Tooltip.Root>
               </Tooltip.Provider>
             </div>
@@ -141,39 +152,30 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
           <div className="flex items-center gap-2 mt-3">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger
-                className="flex items-center justify-between w-full px-3 py-1.5 text-sm rounded-lg hover:bg-foreground/5"
+                className={`flex items-center justify-between w-full px-3 py-1.5 text-sm rounded-lg ${statusBadgeClass}`}
                 onClick={(e) => e.stopPropagation()}
-                aria-label="Change Status"
                 type="button"
               >
                 {job.status}
                 <ChevronDown size={16} />
               </DropdownMenu.Trigger>
 
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  className="min-w-[160px] bg-card rounded-lg border shadow-lg py-1"
-                  sideOffset={5}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {STATUSES.map((status) => (
-                    <DropdownMenu.Item
-                      key={status}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(status);
-                      }}
-                      className="px-3 py-2 text-sm outline-none cursor-pointer hover:bg-foreground/5 flex items-center gap-2"
-                      aria-selected={status === job.status}
-                      role="menuitemradio"
-                      tabIndex={-1}
-                    >
-                      {status === job.status && <Check size={16} />}
-                      {status}
-                    </DropdownMenu.Item>
-                  ))}
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="min-w-[160px] bg-card rounded-lg border shadow-lg py-1"
+                sideOffset={5}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {STATUSES.map((status) => (
+                  <DropdownMenu.Item
+                    key={status}
+                    onClick={() => handleStatusChange(status)}
+                    className="px-3 py-2 text-sm cursor-pointer hover:bg-foreground/5 flex items-center gap-2"
+                  >
+                    {status === job.status && <Check size={16} />}
+                    {status}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Content>
             </DropdownMenu.Root>
           </div>
         </div>
@@ -184,104 +186,53 @@ export default function JobCard({ job, onStatusChange, onDelete, onEdit }) {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm" />
           <Dialog.Content
-            className="fixed top-1/2 left-1/2 max-h-[90vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-card rounded-xl shadow-lg p-6 focus:outline-none"
+            className="fixed top-1/2 left-1/2 max-h-[90vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-card rounded-xl shadow-lg p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-6">
-              {/* Title + Close */}
               <div className="flex items-start justify-between">
                 <div>
-                  <Dialog.Title className="text-2xl font-semibold">{job.company}</Dialog.Title>
+                  <Dialog.Title className="text-2xl font-semibold">
+                    {job.company}
+                  </Dialog.Title>
                   <p className="text-lg text-foreground/60">{job.role}</p>
                 </div>
                 <Dialog.Close asChild>
-                  <button
-                    className="text-foreground/60 hover:text-foreground transition"
-                    aria-label="Close"
-                  >
+                  <button className="text-foreground/60 hover:text-foreground">
                     <X size={24} />
                   </button>
                 </Dialog.Close>
               </div>
 
-              {/* Info Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Details</h3>
+                <div>
+                  <h3 className="font-medium mb-2">Details</h3>
                   <div className="space-y-2 text-foreground/60">
                     <div className="flex items-center gap-2">
                       <MapPin size={16} />
-                      <span>{job.location}</span>
+                      {job.location}
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar size={16} />
-                      <span>{format(new Date(job.date), 'MMMM d, yyyy')}</span>
+                      {format(new Date(job.date), 'MMMM d, yyyy')}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-medium">Status</h3>
+                <div>
+                  <h3 className="font-medium mb-2">Status</h3>
                   <span
-                    className={`inline-block px-3 py-1.5 rounded-full text-sm ${
-                      job.status === 'Offer'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : job.status === 'Interview'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                        : job.status === 'Rejected'
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                    }`}
+                    className={`inline-block px-3 py-1.5 rounded-full text-sm ${statusBadgeClass}`}
                   >
                     {job.status}
                   </span>
                 </div>
               </div>
 
-              {/* Notes */}
               {job.notes && (
-                <div className="space-y-2">
-                  <h3 className="font-medium">Notes</h3>
+                <div>
+                  <h3 className="font-medium mb-2">Notes</h3>
                   <p className="text-sm text-foreground/60">{job.notes}</p>
-                </div>
-              )}
-
-              {/* Hashtags */}
-              {Array.isArray(job.hashtags) && job.hashtags.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-medium">Hashtags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {job.hashtags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Feedback */}
-              {job.feedback && (
-                <div className="space-y-2">
-                  <h3 className="font-medium">Feedback</h3>
-                  <div className="bg-background p-4 rounded-lg space-y-3">
-                    <p className="text-sm">{job.feedback.text}</p>
-                    {job.feedback.learnings && (
-                      <div>
-                        <p className="text-sm font-medium">Learnings:</p>
-                        <p className="text-sm text-foreground/60">{job.feedback.learnings}</p>
-                      </div>
-                    )}
-                    {job.feedback.thankYouNote && (
-                      <div>
-                        <p className="text-sm font-medium">Thank You Note:</p>
-                        <p className="text-sm text-foreground/60">{job.feedback.thankYouNote}</p>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
             </div>
