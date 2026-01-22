@@ -1,39 +1,56 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import SignInModal from '../components/SignInModal';
 import { signInWithGoogle, signInWithGitHub } from '../firebase/firebase';
 
 const features = [
-  { title: 'Track Applications', description: 'Stay on top of your job search journey with clean and structured application tracking.' },
-  { title: 'Kanban + Timeline Views', description: 'Visualize your progress and status easily using intuitive views that boost productivity.' },
-  { title: 'Add Notes & Hashtags', description: 'Customize each job card with personal notes and hashtags to stay organized.' },
+  {
+    title: 'Track Applications',
+    description:
+      'Stay on top of your job search journey with clean and structured application tracking.',
+  },
+  {
+    title: 'Kanban + Timeline Views',
+    description:
+      'Visualize your progress and status easily using intuitive views that boost productivity.',
+  },
+  {
+    title: 'Add Notes & Hashtags',
+    description:
+      'Customize each job card with personal notes and hashtags to stay organized.',
+  },
 ];
 
 const faqs = [
-  { question: 'How does Job Tracker work?', answer: 'Sign in, start adding jobs, and organize them by stage. Update status as you move forward!' },
-  { question: 'Do I need an account?', answer: 'Yes, simply sign in with Google or GitHub to securely track your applications.' },
-  { question: 'Is my data safe?', answer: 'Yes, your data is stored securely with Firebase and only accessible to you.' },
-];
-
-const testimonials = [
-  { name: 'Ananya Sinha', title: 'Frontend Developer', quote: 'Job Tracker helped me stay organized and less stressed. Absolutely love it!', avatar: 'https://ui-avatars.com/api/?name=Ananya+Sinha&background=0D8ABC&color=fff' },
-  { name: 'Ravi Sharma', title: 'Software Engineer', quote: 'The visuals and animations make tracking jobs actually fun!', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { name: 'Priya Desai', title: 'UX Designer', quote: 'Sleek, fast, and very intuitive. Perfect for job seekers.', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  {
+    question: 'How does Job Tracker work?',
+    answer:
+      'You sign in, add your job applications, and move them across stages as your process progresses.',
+  },
+  {
+    question: 'Do I need an account?',
+    answer:
+      'Yes. Authentication helps keep your job data scoped securely to your account.',
+  },
+  {
+    question: 'Is my data safe?',
+    answer:
+      'Your data is designed to be accessible only to you. Backend persistence is being actively improved.',
+  },
 ];
 
 const timelineSteps = [
-  'Sign in securely with Google or GitHub.',
-  'Start adding your job applications.',
-  'Track every stage from Applied to Offer.',
-  'Visualize progress with Kanban and Timeline views.',
-  'Stay organized with notes, hashtags, and filters.',
+  'Authentication-ready setup with Google sign-in.',
+  'Add your job applications with role and company details.',
+  'Move applications across stages as you progress.',
+  'Visualize progress using Kanban and Timeline views.',
+  'Stay organized with notes, tags, and filters.',
 ];
 
 export default function Home() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
-  const [isDark] = useState(() => document.documentElement.classList.contains('dark'));
-  const [jobCount, setJobCount] = useState(0);
   const containerRef = useRef(null);
+
   const { scrollYProgress } = useScroll({ target: containerRef });
   const width = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
@@ -49,21 +66,16 @@ export default function Home() {
     setIsSignInModalOpen(false);
   };
 
-  useEffect(() => {
-    let count = 0;
-    const target = 8981;
-    const interval = setInterval(() => {
-      count += Math.ceil((target - count) / 8);
-      setJobCount(count);
-      if (count >= target) clearInterval(interval);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div ref={containerRef} className="mt-8 pt-20 px-6 max-w-7xl mx-auto relative">
+    <div
+      ref={containerRef}
+      className="mt-8 pt-20 px-6 max-w-7xl mx-auto relative"
+    >
       {/* Scroll Progress Bar */}
-      <motion.div style={{ width }} className="h-1 bg-primary fixed top-0 left-0 right-0 z-50" />
+      <motion.div
+        style={{ width }}
+        className="h-1 bg-primary fixed top-0 left-0 right-0 z-50"
+      />
 
       {/* Hero Section */}
       <motion.section
@@ -72,20 +84,23 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="text-center space-y-6 mb-20"
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground">Welcome to Job Application Tracker</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+          Job Application Tracker
+        </h1>
+
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Simplify your job search journey. Track all your applications, interviews, and offers in one place.
+          A personal tool to organize, track, and visualize your job search
+          journey in one place.
         </p>
-        <div className="text-2xl font-semibold text-primary">
-          🚀 {jobCount.toLocaleString()}+ jobs tracked
-        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Built as a personal project to simplify my own job search workflow.
+        </p>
+
         <motion.button
           onClick={handleGetStarted}
           whileTap={{ scale: 0.95 }}
-          className={`px-6 py-3 rounded-lg transition border ${isDark
-            ? 'bg-white text-black border-black'
-            : 'bg-primary text-primary-foreground border-transparent'
-          } hover:opacity-90`}
+          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
         >
           Get Started
         </motion.button>
@@ -102,15 +117,22 @@ export default function Home() {
             viewport={{ once: true }}
             className="bg-card border p-6 rounded-xl shadow-md"
           >
-            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-            <p className="text-muted-foreground">{feature.description}</p>
+            <h3 className="text-xl font-semibold mb-2">
+              {feature.title}
+            </h3>
+            <p className="text-muted-foreground">
+              {feature.description}
+            </p>
           </motion.div>
         ))}
       </section>
 
       {/* Timeline Section */}
       <section className="mb-28">
-        <h2 className="text-3xl font-bold text-center mb-10">How It Works – Visual Demo</h2>
+        <h2 className="text-3xl font-bold text-center mb-10">
+          How It Works
+        </h2>
+
         <div className="relative border-l-4 border-primary pl-6 space-y-8">
           {timelineSteps.map((step, i) => (
             <motion.div
@@ -128,9 +150,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Why I Built This */}
+      <section className="mb-28 text-center max-w-3xl mx-auto">
+        <h2 className="text-3xl font-bold mb-4">
+          Why I Built This
+        </h2>
+
+        <p className="text-muted-foreground">
+          Managing job applications across multiple platforms quickly becomes
+          overwhelming. I built this project to bring clarity, structure, and
+          visual progress tracking into one simple dashboard. The project is
+          actively evolving with deeper engineering and product improvements.
+        </p>
+      </section>
+
       {/* FAQ Section */}
       <section className="mb-28">
-        <h2 className="text-3xl font-bold mb-6 text-center">FAQs</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center">
+          FAQs
+        </h2>
+
         <div className="space-y-6 max-w-3xl mx-auto">
           {faqs.map((faq, i) => (
             <motion.div
@@ -141,50 +180,14 @@ export default function Home() {
               viewport={{ once: true }}
               className="bg-muted p-4 rounded-lg border"
             >
-              <h4 className="font-semibold">{faq.question}</h4>
-              <p className="text-muted-foreground">{faq.answer}</p>
+              <h4 className="font-semibold">
+                {faq.question}
+              </h4>
+              <p className="text-muted-foreground">
+                {faq.answer}
+              </p>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="mb-28">
-        <h2 className="text-3xl font-bold mb-10 text-center">What users are saying</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.map((t, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.15 }}
-              viewport={{ once: true }}
-              className="bg-card border p-6 rounded-xl shadow-md text-center"
-            >
-              <img src={t.avatar} alt={t.name} className="w-16 h-16 rounded-full mx-auto mb-4 object-cover" />
-              <p className="text-muted-foreground mb-2 italic">“{t.quote}”</p>
-              <h4 className="font-semibold">{t.name}</h4>
-              <span className="text-sm text-muted-foreground">{t.title}</span>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Newsletter/Blog Preview */}
-      <section className="mb-28 text-center max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold mb-4">Get Tips & Insights</h2>
-        <p className="text-muted-foreground mb-6">
-          Subscribe to our blog for job search tips, portfolio hacks, and growth strategies.
-        </p>
-        <div className="flex justify-center">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="px-4 py-3 rounded-l-lg border border-gray-300 dark:border-gray-600 outline-none w-2/3 max-w-xs"
-          />
-          <button className="px-4 py-3 bg-white text-black rounded-r-lg hover:opacity-90 transition">
-            Subscribe
-          </button>
         </div>
       </section>
 
@@ -196,19 +199,21 @@ export default function Home() {
         transition={{ duration: 0.3 }}
         className="text-center mb-24 bg-primary text-primary-foreground p-10 rounded-xl"
       >
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to take control of your job hunt?</h2>
-        <p className="mb-6">Start tracking applications, interviews, and offers with ease.</p>
-        <motion.button
-  onClick={handleGetStarted}
-  whileTap={{ scale: 0.95 }}
-  className="px-6 py-3 rounded-lg border
-             bg-white text-black border-black
-             dark:bg-black dark:text-white dark:border-white
-             hover:opacity-90 transition"
->
-  Get Started
-</motion.button>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">
+          Ready to organize your job search?
+        </h2>
 
+        <p className="mb-6">
+          Track applications, interviews, and offers with clarity and focus.
+        </p>
+
+        <motion.button
+          onClick={handleGetStarted}
+          whileTap={{ scale: 0.95 }}
+          className="px-6 py-3 rounded-lg bg-white text-black hover:opacity-90 transition"
+        >
+          Get Started
+        </motion.button>
       </motion.section>
 
       {/* Sign In Modal */}
@@ -217,7 +222,6 @@ export default function Home() {
         onClose={() => setIsSignInModalOpen(false)}
         onGoogleSignIn={handleGoogleSignIn}
         onGithubSignIn={handleGitHubSignIn}
-        isDark={isDark}
       />
     </div>
   );
