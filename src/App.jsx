@@ -17,9 +17,8 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
+import { JOB_STATUSES } from './constants/jobStatuses';
 
-/* ✅ UPDATED STATUS ORDER */
-const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected'];
 
 const SORT_OPTIONS = [
   { label: 'Date Applied', value: 'date' },
@@ -180,7 +179,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       className="flex gap-6 overflow-x-auto pb-4"
                     >
-                      {STATUSES.map((status) => {
+                      {JOB_STATUSES.map((status) => {
                         const list = filteredJobs.filter(j => j.status === status);
 
                         return (
