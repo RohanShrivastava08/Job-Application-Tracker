@@ -1,60 +1,78 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
+import {
+  LayoutGrid,
+  Clock,
+  StickyNote,
+  ShieldCheck,
+  ArrowRight,
+} from 'lucide-react';
+
 import SignInModal from '../components/SignInModal';
 import { signInWithGoogle, signInWithGitHub } from '../firebase/firebase';
 
+/* -------------------- CONTENT -------------------- */
+
 const features = [
   {
-    title: 'Track Applications',
+    icon: LayoutGrid,
+    title: 'Smart Job Tracking',
     description:
-      'Stay on top of your job search journey with clean and structured application tracking.',
+      'Track every application across Wishlist, Applied, Interview, Offer, and Rejected stages.',
   },
   {
-    title: 'Kanban + Timeline Views',
+    icon: Clock,
+    title: 'Kanban & Timeline Views',
     description:
-      'Visualize your progress and status easily using intuitive views that boost productivity.',
+      'Switch between Kanban boards and timeline view to understand progress clearly.',
   },
   {
-    title: 'Add Notes & Hashtags',
+    icon: StickyNote,
+    title: 'Notes & Context',
     description:
-      'Customize each job card with personal notes and hashtags to stay organized.',
+      'Attach notes to every job so you never forget follow-ups or interview feedback.',
   },
+  {
+    icon: ShieldCheck,
+    title: 'Secure & Private',
+    description:
+      'Your data is protected using Firebase Authentication and Firestore security rules.',
+  },
+];
+
+const steps = [
+  'Sign in securely with Google or GitHub',
+  'Add job applications with role, company, and location',
+  'Move jobs across stages as you progress',
+  'Search, filter, and visualize your journey',
+  'Stay consistent and in control of your job hunt',
 ];
 
 const faqs = [
   {
-    question: 'How does Job Tracker work?',
-    answer:
-      'You sign in, add your job applications, and move them across stages as your process progresses.',
+    q: 'Is this free to use?',
+    a: 'Yes. This tool is free and built to help job seekers stay organized.',
   },
   {
-    question: 'Do I need an account?',
-    answer:
-      'Yes. Authentication helps keep your job data scoped securely to your account.',
+    q: 'Is my data safe?',
+    a: 'Yes. Your data is scoped to your account using Firebase security rules.',
   },
   {
-    question: 'Is my data safe?',
-    answer:
-      'Your data is designed to be accessible only to you. Backend persistence is being actively improved.',
+    q: 'Who is this built for?',
+    a: 'Anyone actively applying for jobs and wanting clarity and structure.',
   },
 ];
 
-const timelineSteps = [
-  'Authentication-ready setup with Google sign-in.',
-  'Add your job applications with role and company details.',
-  'Move applications across stages as you progress.',
-  'Visualize progress using Kanban and Timeline views.',
-  'Stay organized with notes, tags, and filters.',
-];
+/* -------------------- COMPONENT -------------------- */
 
 export default function Home() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const containerRef = useRef(null);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const width = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  const handleGetStarted = () => setIsSignInModalOpen(true);
+  const openSignIn = () => setIsSignInModalOpen(true);
 
   const handleGoogleSignIn = async () => {
     await signInWithGoogle();
@@ -67,156 +85,154 @@ export default function Home() {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="mt-8 pt-20 px-6 max-w-7xl mx-auto relative"
-    >
-      {/* Scroll Progress Bar */}
+    <div ref={containerRef} className="relative">
+      {/* Scroll Progress */}
       <motion.div
-        style={{ width }}
-        className="h-1 bg-primary fixed top-0 left-0 right-0 z-50"
+        style={{ width: progressWidth }}
+        className="fixed top-0 left-0 h-1 bg-primary z-50"
       />
 
-      {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center space-y-6 mb-20"
-      >
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-          Job Application Tracker
-        </h1>
-
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          A personal tool to organize, track, and visualize your job search
-          journey in one place.
-        </p>
-
-        <p className="text-sm text-muted-foreground">
-          Built as a personal project to simplify my own job search workflow.
-        </p>
-
-        <motion.button
-          onClick={handleGetStarted}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
+      {/* ================= HERO ================= */}
+      <section className="pt-32 pb-24 px-6 max-w-7xl mx-auto text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-6xl font-bold tracking-tight"
         >
-          Get Started
-        </motion.button>
-      </motion.section>
+          Take Control of Your
+          <span className="block text-primary mt-2">
+            Job Applications
+          </span>
+        </motion.h1>
 
-      {/* Features Section */}
-      <section className="grid md:grid-cols-3 gap-8 mb-28">
-        {features.map((feature, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            viewport={{ once: true }}
-            className="bg-card border p-6 rounded-xl shadow-md"
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground"
+        >
+          A clean, visual job application tracker built to help you stay focused,
+          consistent, and stress-free during your job hunt.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-10 flex justify-center"
+        >
+          <button
+            onClick={openSignIn}
+            className="group px-8 py-4 bg-primary text-primary-foreground rounded-xl font-medium flex items-center gap-2 hover:opacity-90 transition"
           >
-            <h3 className="text-xl font-semibold mb-2">
-              {feature.title}
-            </h3>
-            <p className="text-muted-foreground">
-              {feature.description}
-            </p>
-          </motion.div>
-        ))}
+            Get Started
+            <ArrowRight
+              size={18}
+              className="group-hover:translate-x-1 transition-transform"
+            />
+          </button>
+        </motion.div>
       </section>
 
-      {/* Timeline Section */}
-      <section className="mb-28">
-        <h2 className="text-3xl font-bold text-center mb-10">
+      {/* ================= FEATURES ================= */}
+      <section className="px-6 max-w-7xl mx-auto mb-28">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature, i) => {
+            const Icon = feature.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-card border rounded-xl p-6 shadow-sm hover:shadow-md transition"
+              >
+                <Icon className="text-primary mb-4" size={28} />
+                <h3 className="font-semibold text-lg mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {feature.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ================= HOW IT WORKS ================= */}
+      <section className="px-6 max-w-4xl mx-auto mb-28">
+        <h2 className="text-3xl font-bold text-center mb-12">
           How It Works
         </h2>
 
-        <div className="relative border-l-4 border-primary pl-6 space-y-8">
-          {timelineSteps.map((step, i) => (
+        <div className="space-y-6">
+          {steps.map((step, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="relative"
+              className="flex items-start gap-4"
             >
-              <div className="absolute left-[-36px] top-1 w-4 h-4 rounded-full bg-primary" />
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
+                {i + 1}
+              </div>
               <p className="text-lg">{step}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Why I Built This */}
-      <section className="mb-28 text-center max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold mb-4">
-          Why I Built This
+      {/* ================= FAQ ================= */}
+      <section className="px-6 max-w-4xl mx-auto mb-28">
+        <h2 className="text-3xl font-bold text-center mb-10">
+          Frequently Asked Questions
         </h2>
 
-        <p className="text-muted-foreground">
-          Managing job applications across multiple platforms quickly becomes
-          overwhelming. I built this project to bring clarity, structure, and
-          visual progress tracking into one simple dashboard. The project is
-          actively evolving with deeper engineering and product improvements.
-        </p>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="mb-28">
-        <h2 className="text-3xl font-bold mb-6 text-center">
-          FAQs
-        </h2>
-
-        <div className="space-y-6 max-w-3xl mx-auto">
-          {faqs.map((faq, i) => (
+        <div className="space-y-4">
+          {faqs.map((item, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-muted p-4 rounded-lg border"
+              className="bg-muted border rounded-lg p-5"
             >
-              <h4 className="font-semibold">
-                {faq.question}
-              </h4>
-              <p className="text-muted-foreground">
-                {faq.answer}
-              </p>
+              <h4 className="font-semibold mb-2">{item.q}</h4>
+              <p className="text-muted-foreground">{item.a}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Call to Action */}
-      <motion.section
-        initial={{ opacity: 0, scale: 0.95 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3 }}
-        className="text-center mb-24 bg-primary text-primary-foreground p-10 rounded-xl"
-      >
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">
-          Ready to organize your job search?
-        </h2>
-
-        <p className="mb-6">
-          Track applications, interviews, and offers with clarity and focus.
-        </p>
-
-        <motion.button
-          onClick={handleGetStarted}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 rounded-lg bg-white text-black hover:opacity-90 transition"
+      {/* ================= FINAL CTA ================= */}
+      <section className="px-6 max-w-5xl mx-auto mb-32">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="bg-primary text-primary-foreground rounded-2xl p-10 text-center"
         >
-          Get Started
-        </motion.button>
-      </motion.section>
+          <h2 className="text-3xl font-bold mb-4">
+            Start Tracking Smarter Today
+          </h2>
+          <p className="mb-6 text-primary-foreground/90">
+            Stop losing track of applications. Bring clarity to your job search.
+          </p>
+          <button
+            onClick={openSignIn}
+            className="px-6 py-3 bg-white text-black rounded-lg font-medium hover:opacity-90 transition"
+          >
+            Get Started
+          </button>
+        </motion.div>
+      </section>
 
-      {/* Sign In Modal */}
+      {/* ================= SIGN IN ================= */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
