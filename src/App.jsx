@@ -4,7 +4,13 @@ import { Search, LayoutGrid, Clock, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 
-import { getJobs, addJob, updateJob, deleteJob } from './lib/store';
+import {
+  subscribeToJobs,
+  addJob,
+  updateJob,
+  deleteJob,
+} from './lib/store';
+
 import { auth, signInWithGoogle, signInWithGitHub } from './firebase/firebase';
 
 import Header from './components/Header';
@@ -17,7 +23,6 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
-
 import { JOB_STATUSES } from './constants/jobStatuses';
 
 function App() {
@@ -25,59 +30,72 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [jobs, setJobs] = useState([]);
-  const [boardId] = useState('default');
+  const boardId = 'default';
 
-  /* ---------- VIEW ---------- */
+  /* VIEW */
   const [view, setView] = useState('kanban');
 
-  /* ---------- SEARCH STATE ---------- */
-  const [filterType, setFilterType] = useState('company'); // company | date
+  /* SEARCH */
+  const [filterType, setFilterType] = useState('company');
   const [searchText, setSearchText] = useState('');
   const [searchDate, setSearchDate] = useState('');
   const [appliedFilter, setAppliedFilter] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  /* ---------- MODAL ---------- */
+  /* MODAL */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
 
-  /* ---------- UI ---------- */
+  /* UI */
   const [isDark, setIsDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches
   );
   const [loading, setLoading] = useState(true);
 
-  /* ---------- AUTH ---------- */
+  /* AUTH + REALTIME JOBS */
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (currentUser) => {
+    let unsubscribeJobs = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
 
-      if (currentUser) {
-        const fetched = await getJobs(currentUser.uid, boardId);
-
-        const normalized = fetched.map((job) => ({
-          ...job,
-          status: JOB_STATUSES.includes(job.status) ? job.status : 'Wishlist',
-        }));
-
-        setJobs(normalized);
-        navigate('/dashboard');
-      } else {
+      if (!currentUser) {
         setJobs([]);
         navigate('/');
+        setLoading(false);
+        return;
       }
 
+      unsubscribeJobs = subscribeToJobs(
+        currentUser.uid,
+        boardId,
+        (jobs) => {
+          setJobs(
+            jobs.map((job) => ({
+              ...job,
+              status: JOB_STATUSES.includes(job.status)
+                ? job.status
+                : 'Wishlist',
+            }))
+          );
+        }
+      );
+
+      navigate('/dashboard');
       setLoading(false);
     });
 
-    return () => unsub();
-  }, [navigate, boardId]);
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeJobs) unsubscribeJobs();
+    };
+  }, [navigate]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  /* ---------- SEARCH APPLY ---------- */
+  /* SEARCH */
   const applySearch = () => {
     setIsSearching(true);
 
@@ -97,7 +115,7 @@ function App() {
       }
 
       setIsSearching(false);
-    }, 400);
+    }, 300);
   };
 
   const clearSearch = () => {
@@ -107,45 +125,40 @@ function App() {
     setAppliedFilter(null);
   };
 
-  /* ---------- FILTERED JOBS ---------- */
   const filteredJobs = useMemo(() => {
-    let list = [...jobs];
+    if (!appliedFilter) return jobs;
 
-    if (appliedFilter) {
+    return jobs.filter((job) => {
       if (appliedFilter.type === 'company') {
-        list = list.filter(
-          (job) =>
-            job.company.toLowerCase().includes(appliedFilter.value) ||
-            job.role.toLowerCase().includes(appliedFilter.value) ||
-            job.location.toLowerCase().includes(appliedFilter.value)
+        return (
+          job.company.toLowerCase().includes(appliedFilter.value) ||
+          job.role.toLowerCase().includes(appliedFilter.value) ||
+          job.location.toLowerCase().includes(appliedFilter.value)
         );
       }
 
       if (appliedFilter.type === 'date') {
-        list = list.filter((job) => job.date === appliedFilter.value);
+        return job.date === appliedFilter.value;
       }
-    }
 
-    return list;
+      return true;
+    });
   }, [jobs, appliedFilter]);
 
-  /* ---------- CRUD ---------- */
+  /* CRUD */
   const handleAddJob = async (job) => {
-    const updated = await addJob(user.uid, boardId, job);
-    setJobs(updated);
+    await addJob(user.uid, boardId, job);
     setIsModalOpen(false);
   };
 
   const handleUpdateJob = async (id, updates) => {
-    const updated = await updateJob(user.uid, boardId, id, updates);
-    setJobs(updated);
+    await updateJob(user.uid, boardId, id, updates);
     setEditingJob(null);
     setIsModalOpen(false);
   };
 
   const handleDeleteJob = async (id) => {
-    const updated = await deleteJob(user.uid, boardId, id);
-    setJobs(updated);
+    await deleteJob(user.uid, boardId, id);
   };
 
   if (loading) {
@@ -170,25 +183,31 @@ function App() {
               <main className="max-w-7xl mx-auto px-6 py-24">
                 <Dashboard jobs={jobs} />
 
-                {/* ===== CONTROLS ===== */}
+                {/* CONTROLS */}
                 <div className="flex flex-wrap items-center gap-3 mb-8">
-                  {/* View Toggle */}
                   <div className="flex border rounded-lg overflow-hidden">
                     <button
                       onClick={() => setView('kanban')}
-                      className={`p-2 ${view === 'kanban' ? 'bg-primary text-primary-foreground' : ''}`}
+                      className={`p-2 ${
+                        view === 'kanban'
+                          ? 'bg-primary text-primary-foreground'
+                          : ''
+                      }`}
                     >
                       <LayoutGrid size={18} />
                     </button>
                     <button
                       onClick={() => setView('timeline')}
-                      className={`p-2 ${view === 'timeline' ? 'bg-primary text-primary-foreground' : ''}`}
+                      className={`p-2 ${
+                        view === 'timeline'
+                          ? 'bg-primary text-primary-foreground'
+                          : ''
+                      }`}
                     >
                       <Clock size={18} />
                     </button>
                   </div>
 
-                  {/* Search Input */}
                   {filterType === 'company' ? (
                     <input
                       value={searchText}
@@ -205,7 +224,6 @@ function App() {
                     />
                   )}
 
-                  {/* Filter */}
                   <select
                     value={filterType}
                     onChange={(e) => {
@@ -219,7 +237,6 @@ function App() {
                     <option value="date">Date Applied</option>
                   </select>
 
-                  {/* Search Button */}
                   <button
                     onClick={applySearch}
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg flex items-center gap-2"
@@ -232,7 +249,6 @@ function App() {
                     Search
                   </button>
 
-                  {/* Clear */}
                   {appliedFilter && (
                     <button
                       onClick={clearSearch}
@@ -243,7 +259,6 @@ function App() {
                     </button>
                   )}
 
-                  {/* Add Job */}
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg"
@@ -252,7 +267,7 @@ function App() {
                   </button>
                 </div>
 
-                {/* ===== CONTENT ===== */}
+                {/* CONTENT */}
                 <AnimatePresence mode="wait">
                   {view === 'kanban' ? (
                     <motion.div className="flex gap-6 overflow-x-auto pb-4">
