@@ -4,13 +4,7 @@ import { Search, LayoutGrid, Clock, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 
-import {
-  subscribeToJobs,
-  addJob,
-  updateJob,
-  deleteJob,
-} from './lib/store';
-
+import { getJobs, addJob, updateJob, deleteJob } from './lib/store';
 import { auth, signInWithGoogle, signInWithGitHub } from './firebase/firebase';
 
 import Header from './components/Header';
@@ -23,6 +17,7 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
+
 import { JOB_STATUSES } from './constants/jobStatuses';
 
 function App() {
@@ -52,11 +47,9 @@ function App() {
   );
   const [loading, setLoading] = useState(true);
 
-  /* AUTH + REALTIME JOBS */
+  /* AUTH */
   useEffect(() => {
-    let unsubscribeJobs = null;
-
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 
       if (!currentUser) {
@@ -66,36 +59,31 @@ function App() {
         return;
       }
 
-      unsubscribeJobs = subscribeToJobs(
-        currentUser.uid,
-        boardId,
-        (jobs) => {
-          setJobs(
-            jobs.map((job) => ({
+      const fetchedJobs = await getJobs(currentUser.uid, boardId);
+
+      setJobs(
+        Array.isArray(fetchedJobs)
+          ? fetchedJobs.map((job) => ({
               ...job,
               status: JOB_STATUSES.includes(job.status)
                 ? job.status
                 : 'Wishlist',
             }))
-          );
-        }
+          : []
       );
 
       navigate('/dashboard');
       setLoading(false);
     });
 
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeJobs) unsubscribeJobs();
-    };
+    return () => unsub();
   }, [navigate]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  /* SEARCH */
+  /* SEARCH APPLY */
   const applySearch = () => {
     setIsSearching(true);
 
@@ -125,6 +113,7 @@ function App() {
     setAppliedFilter(null);
   };
 
+  /* FILTERED JOBS */
   const filteredJobs = useMemo(() => {
     if (!appliedFilter) return jobs;
 
@@ -145,20 +134,39 @@ function App() {
     });
   }, [jobs, appliedFilter]);
 
+  /* ===== STEP 2 OPTIMIZATION: GROUP JOBS ONCE ===== */
+  const jobsByStatus = useMemo(() => {
+    const grouped = {};
+    JOB_STATUSES.forEach((status) => {
+      grouped[status] = [];
+    });
+
+    filteredJobs.forEach((job) => {
+      if (grouped[job.status]) {
+        grouped[job.status].push(job);
+      }
+    });
+
+    return grouped;
+  }, [filteredJobs]);
+
   /* CRUD */
   const handleAddJob = async (job) => {
-    await addJob(user.uid, boardId, job);
+    const updated = await addJob(user.uid, boardId, job);
+    setJobs(updated);
     setIsModalOpen(false);
   };
 
   const handleUpdateJob = async (id, updates) => {
-    await updateJob(user.uid, boardId, id, updates);
+    const updated = await updateJob(user.uid, boardId, id, updates);
+    setJobs(updated);
     setEditingJob(null);
     setIsModalOpen(false);
   };
 
   const handleDeleteJob = async (id) => {
-    await deleteJob(user.uid, boardId, id);
+    const updated = await deleteJob(user.uid, boardId, id);
+    setJobs(updated);
   };
 
   if (loading) {
@@ -193,6 +201,7 @@ function App() {
                           ? 'bg-primary text-primary-foreground'
                           : ''
                       }`}
+                      aria-label="Kanban View"
                     >
                       <LayoutGrid size={18} />
                     </button>
@@ -203,6 +212,7 @@ function App() {
                           ? 'bg-primary text-primary-foreground'
                           : ''
                       }`}
+                      aria-label="Timeline View"
                     >
                       <Clock size={18} />
                     </button>
@@ -272,9 +282,7 @@ function App() {
                   {view === 'kanban' ? (
                     <motion.div className="flex gap-6 overflow-x-auto pb-4">
                       {JOB_STATUSES.map((status) => {
-                        const list = filteredJobs.filter(
-                          (job) => job.status === status
-                        );
+                        const list = jobsByStatus[status];
 
                         return (
                           <div key={status} className="min-w-[280px] space-y-4">
@@ -283,7 +291,13 @@ function App() {
                             </h2>
 
                             {list.length === 0 ? (
-                              <EmptyState status={status} />
+                              appliedFilter ? (
+                                <div className="text-sm text-foreground/50">
+                                  No results for current search
+                                </div>
+                              ) : (
+                                <EmptyState status={status} />
+                              )
                             ) : (
                               list.map((job) => (
                                 <JobCard
