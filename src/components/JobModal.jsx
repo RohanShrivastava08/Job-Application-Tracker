@@ -3,10 +3,6 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-/**
- * Centralized job lifecycle
- * Wishlist is default entry point
- */
 const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected'];
 
 export default function JobModal({
@@ -25,9 +21,6 @@ export default function JobModal({
     notes: '',
   });
 
-  /* ----------------------------- */
-  /* Load data when editing        */
-  /* ----------------------------- */
   useEffect(() => {
     if (job) {
       setFormData({
@@ -50,9 +43,6 @@ export default function JobModal({
     }
   }, [job]);
 
-  /* ----------------------------- */
-  /* Submit                        */
-  /* ----------------------------- */
   const handleSubmit = (e) => {
     e.preventDefault();
 
