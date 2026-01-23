@@ -4,12 +4,7 @@ import { Search, LayoutGrid, Clock, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 
-import {
-  subscribeToJobs,
-  addJob,
-  updateJob,
-  deleteJob,
-} from './lib/store';
+import { getJobs, addJob, updateJob, deleteJob } from './lib/store';
 import { auth, signInWithGoogle, signInWithGitHub } from './firebase/firebase';
 
 import Header from './components/Header';
@@ -35,9 +30,8 @@ function App() {
   const [view, setView] = useState('kanban');
 
   /* SEARCH */
-  const [filterType, setFilterType] = useState('company');
+  const [filterType, setFilterType] = useState('company'); // company | location
   const [searchText, setSearchText] = useState('');
-  const [searchDate, setSearchDate] = useState('');
   const [appliedFilter, setAppliedFilter] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -51,11 +45,9 @@ function App() {
   );
   const [loading, setLoading] = useState(true);
 
-  /* AUTH + REALTIME JOBS */
+  /* AUTH */
   useEffect(() => {
-    let unsubscribeJobs = null;
-
-    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 
       if (!currentUser) {
@@ -65,99 +57,92 @@ function App() {
         return;
       }
 
-      unsubscribeJobs = subscribeToJobs(
-        currentUser.uid,
-        boardId,
-        (incomingJobs) => {
-          setJobs(
-            incomingJobs.map((job) => ({
+      const fetchedJobs = await getJobs(currentUser.uid, boardId);
+
+      setJobs(
+        Array.isArray(fetchedJobs)
+          ? fetchedJobs.map((job) => ({
               ...job,
               status: JOB_STATUSES.includes(job.status)
                 ? job.status
                 : 'Wishlist',
             }))
-          );
-          setLoading(false);
-        }
+          : []
       );
 
       navigate('/dashboard');
+      setLoading(false);
     });
 
-    return () => {
-      unsubAuth();
-      if (unsubscribeJobs) unsubscribeJobs();
-    };
+    return () => unsub();
   }, [navigate]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  /* SEARCH */
+  /* APPLY SEARCH */
   const applySearch = () => {
+    if (!searchText.trim()) return;
+
     setIsSearching(true);
 
     setTimeout(() => {
-      if (filterType === 'company' && searchText.trim()) {
-        setAppliedFilter({
-          type: 'company',
-          value: searchText.toLowerCase(),
-        });
-      }
-
-      if (filterType === 'date' && searchDate) {
-        setAppliedFilter({
-          type: 'date',
-          value: searchDate,
-        });
-      }
-
+      setAppliedFilter({
+        type: filterType,
+        value: searchText.toLowerCase(),
+      });
       setIsSearching(false);
-    }, 300);
+    }, 250);
   };
 
   const clearSearch = () => {
     setSearchText('');
-    setSearchDate('');
     setFilterType('company');
     setAppliedFilter(null);
   };
 
+  /* FILTERED JOBS */
   const filteredJobs = useMemo(() => {
     if (!appliedFilter) return jobs;
 
     return jobs.filter((job) => {
+      const company = job.company?.toLowerCase() || '';
+      const role = job.role?.toLowerCase() || '';
+      const location = job.location?.toLowerCase() || '';
+
       if (appliedFilter.type === 'company') {
         return (
-          job.company.toLowerCase().includes(appliedFilter.value) ||
-          job.role.toLowerCase().includes(appliedFilter.value) ||
-          job.location.toLowerCase().includes(appliedFilter.value)
+          company.includes(appliedFilter.value) ||
+          role.includes(appliedFilter.value)
         );
       }
 
-      if (appliedFilter.type === 'date') {
-        return job.date === appliedFilter.value;
+      if (appliedFilter.type === 'location') {
+        return location.includes(appliedFilter.value);
       }
 
       return true;
     });
   }, [jobs, appliedFilter]);
 
-  /* CRUD — NO setJobs HERE */
+  /* CRUD */
   const handleAddJob = async (job) => {
-    await addJob(user.uid, boardId, job);
+    const updated = await addJob(user.uid, boardId, job);
+    setJobs(updated);
     setIsModalOpen(false);
   };
 
   const handleUpdateJob = async (id, updates) => {
-    await updateJob(user.uid, boardId, id, updates);
+    const updated = await updateJob(user.uid, boardId, id, updates);
+    setJobs(updated);
     setEditingJob(null);
     setIsModalOpen(false);
   };
 
   const handleDeleteJob = async (id) => {
-    await deleteJob(user.uid, boardId, id);
+    const updated = await deleteJob(user.uid, boardId, id);
+    setJobs(updated);
   };
 
   if (loading) {
@@ -184,6 +169,7 @@ function App() {
 
                 {/* CONTROLS */}
                 <div className="flex flex-wrap items-center gap-3 mb-8">
+                  {/* VIEW TOGGLE */}
                   <div className="flex border rounded-lg overflow-hidden">
                     <button
                       onClick={() => setView('kanban')}
@@ -207,35 +193,33 @@ function App() {
                     </button>
                   </div>
 
-                  {filterType === 'company' ? (
-                    <input
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      placeholder="Search jobs..."
-                      className="px-4 py-2 bg-card border rounded-lg max-w-xs w-full"
-                    />
-                  ) : (
-                    <input
-                      type="date"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                      className="px-4 py-2 bg-card border rounded-lg"
-                    />
-                  )}
+                  {/* SEARCH INPUT */}
+                  <input
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder={
+                      filterType === 'company'
+                        ? 'Search company or role...'
+                        : 'Search location...'
+                    }
+                    className="px-4 py-2 bg-card border rounded-lg max-w-xs w-full"
+                  />
 
+                  {/* FILTER TYPE */}
                   <select
                     value={filterType}
                     onChange={(e) => {
                       setFilterType(e.target.value);
                       setSearchText('');
-                      setSearchDate('');
+                      setAppliedFilter(null);
                     }}
                     className="px-4 py-2 bg-card border rounded-lg"
                   >
                     <option value="company">Company / Role</option>
-                    <option value="date">Date Applied</option>
+                    <option value="location">Location</option>
                   </select>
 
+                  {/* SEARCH BUTTON */}
                   <button
                     onClick={applySearch}
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg flex items-center gap-2"
@@ -248,6 +232,7 @@ function App() {
                     Search
                   </button>
 
+                  {/* CLEAR */}
                   {appliedFilter && (
                     <button
                       onClick={clearSearch}
@@ -258,6 +243,7 @@ function App() {
                     </button>
                   )}
 
+                  {/* ADD JOB */}
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg"

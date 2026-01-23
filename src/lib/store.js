@@ -10,17 +10,16 @@ import {
   orderBy,
   limit,
   startAfter,
-  onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
 
-/* ---------------- Helpers ---------------- */
-
+/* Helper */
 const jobsCollection = (uid, boardId = 'default') =>
   collection(firestore, 'users', uid, 'boards', boardId, 'jobs');
 
-/* ---------------- One-time Fetch (BACKWARD SAFE) ---------------- */
-
+/* ============================
+   GET JOBS
+============================ */
 export const getJobs = async (
   uid,
   boardId = 'default',
@@ -57,44 +56,11 @@ export const getJobs = async (
   }
 };
 
-/* ---------------- Realtime Subscription ---------------- */
-
-export const subscribeToJobs = (
-  uid,
-  boardId = 'default',
-  onChange,
-  pageSize = 500
-) => {
-  if (!uid) return () => {};
-
-  const q = query(
-    jobsCollection(uid, boardId),
-    orderBy('createdAt', 'desc'),
-    limit(pageSize)
-  );
-
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const jobs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      onChange(jobs);
-    },
-    (error) => {
-      console.error('Realtime jobs listener error:', error);
-      onChange([]);
-    }
-  );
-
-  return unsubscribe;
-};
-
-/* ---------------- CRUD ---------------- */
-
+/* ============================
+   ADD JOB
+============================ */
 export const addJob = async (uid, boardId, job) => {
-  if (!uid || !job) return;
+  if (!uid || !job) return [];
 
   await addDoc(jobsCollection(uid, boardId), {
     company: job.company,
@@ -106,10 +72,15 @@ export const addJob = async (uid, boardId, job) => {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  return getJobs(uid, boardId);
 };
 
+/* ============================
+   UPDATE JOB
+============================ */
 export const updateJob = async (uid, boardId, jobId, updates) => {
-  if (!uid || !jobId) return;
+  if (!uid || !jobId) return [];
 
   const jobRef = doc(
     firestore,
@@ -125,10 +96,15 @@ export const updateJob = async (uid, boardId, jobId, updates) => {
     ...updates,
     updatedAt: serverTimestamp(),
   });
+
+  return getJobs(uid, boardId);
 };
 
+/* ============================
+   DELETE JOB
+============================ */
 export const deleteJob = async (uid, boardId, jobId) => {
-  if (!uid || !jobId) return;
+  if (!uid || !jobId) return [];
 
   const jobRef = doc(
     firestore,
@@ -141,4 +117,6 @@ export const deleteJob = async (uid, boardId, jobId) => {
   );
 
   await deleteDoc(jobRef);
+
+  return getJobs(uid, boardId);
 };
