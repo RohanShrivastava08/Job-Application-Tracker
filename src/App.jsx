@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, LayoutGrid, Clock } from 'lucide-react';
+import { Search, LayoutGrid, Clock, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 
@@ -17,44 +17,51 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
+
 import { JOB_STATUSES } from './constants/jobStatuses';
 
-const SORT_OPTIONS = [
-  { label: 'Date Applied', value: 'date' },
-  { label: 'Company Name', value: 'company' },
-];
-
-export default function App() {
+function App() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [boardId] = useState('default');
 
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('date');
+  /* ---------- VIEW ---------- */
   const [view, setView] = useState('kanban');
+
+  /* ---------- SEARCH STATE ---------- */
+  const [filterType, setFilterType] = useState('company'); // company | date
+  const [searchText, setSearchText] = useState('');
+  const [searchDate, setSearchDate] = useState('');
+  const [appliedFilter, setAppliedFilter] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  /* ---------- MODAL ---------- */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
-  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+
+  /* ---------- UI ---------- */
   const [isDark, setIsDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches
   );
   const [loading, setLoading] = useState(true);
 
+  /* ---------- AUTH ---------- */
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 
       if (currentUser) {
-        try {
-          const fetched = await getJobs(currentUser.uid, boardId);
-          setJobs(fetched);
-          navigate('/dashboard');
-        } catch (err) {
-          console.error(err);
-          setJobs([]);
-        }
+        const fetched = await getJobs(currentUser.uid, boardId);
+
+        const normalized = fetched.map((job) => ({
+          ...job,
+          status: JOB_STATUSES.includes(job.status) ? job.status : 'Wishlist',
+        }));
+
+        setJobs(normalized);
+        navigate('/dashboard');
       } else {
         setJobs([]);
         navigate('/');
@@ -63,40 +70,66 @@ export default function App() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => unsub();
   }, [navigate, boardId]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  const processedJobs = useMemo(() => {
-    let result = [...jobs];
+  /* ---------- SEARCH APPLY ---------- */
+  const applySearch = () => {
+    setIsSearching(true);
 
-    // Search
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter((job) =>
-        [job.company, job.role, job.location]
-          .join(' ')
-          .toLowerCase()
-          .includes(q)
-      );
-    }
-
-    //  Sort
-    result.sort((a, b) => {
-      if (sortBy === 'company') {
-        return a.company.localeCompare(b.company);
+    setTimeout(() => {
+      if (filterType === 'company' && searchText.trim()) {
+        setAppliedFilter({
+          type: 'company',
+          value: searchText.toLowerCase(),
+        });
       }
 
-      // Default: date
-      return new Date(b.date) - new Date(a.date);
-    });
+      if (filterType === 'date' && searchDate) {
+        setAppliedFilter({
+          type: 'date',
+          value: searchDate,
+        });
+      }
 
-    return result;
-  }, [jobs, search, sortBy]);
+      setIsSearching(false);
+    }, 400);
+  };
 
+  const clearSearch = () => {
+    setSearchText('');
+    setSearchDate('');
+    setFilterType('company');
+    setAppliedFilter(null);
+  };
+
+  /* ---------- FILTERED JOBS ---------- */
+  const filteredJobs = useMemo(() => {
+    let list = [...jobs];
+
+    if (appliedFilter) {
+      if (appliedFilter.type === 'company') {
+        list = list.filter(
+          (job) =>
+            job.company.toLowerCase().includes(appliedFilter.value) ||
+            job.role.toLowerCase().includes(appliedFilter.value) ||
+            job.location.toLowerCase().includes(appliedFilter.value)
+        );
+      }
+
+      if (appliedFilter.type === 'date') {
+        list = list.filter((job) => job.date === appliedFilter.value);
+      }
+    }
+
+    return list;
+  }, [jobs, appliedFilter]);
+
+  /* ---------- CRUD ---------- */
   const handleAddJob = async (job) => {
     const updated = await addJob(user.uid, boardId, job);
     setJobs(updated);
@@ -106,6 +139,8 @@ export default function App() {
   const handleUpdateJob = async (id, updates) => {
     const updated = await updateJob(user.uid, boardId, id, updates);
     setJobs(updated);
+    setEditingJob(null);
+    setIsModalOpen(false);
   };
 
   const handleDeleteJob = async (id) => {
@@ -123,10 +158,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header
-        isDark={isDark}
-        onThemeToggle={() => setIsDark(!isDark)}
-      />
+      <Header isDark={isDark} onThemeToggle={() => setIsDark(!isDark)} />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -138,58 +170,78 @@ export default function App() {
               <main className="max-w-7xl mx-auto px-6 py-24">
                 <Dashboard jobs={jobs} />
 
-                {/* Controls */}
-                <div className="flex flex-wrap items-center gap-4 mb-8">
-                  {/* Search */}
-                  <div className="relative max-w-xs w-full">
-                    <Search
-                      size={18}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
-                    />
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search company, role, location..."
-                      className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg"
-                    />
-                  </div>
-
-                  {/* Sort */}
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 bg-card border rounded-lg"
-                  >
-                    {SORT_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        Sort by: {opt.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* View toggle */}
+                {/* ===== CONTROLS ===== */}
+                <div className="flex flex-wrap items-center gap-3 mb-8">
+                  {/* View Toggle */}
                   <div className="flex border rounded-lg overflow-hidden">
                     <button
                       onClick={() => setView('kanban')}
-                      className={`p-2 ${
-                        view === 'kanban'
-                          ? 'bg-primary text-primary-foreground'
-                          : ''
-                      }`}
+                      className={`p-2 ${view === 'kanban' ? 'bg-primary text-primary-foreground' : ''}`}
                     >
                       <LayoutGrid size={18} />
                     </button>
                     <button
                       onClick={() => setView('timeline')}
-                      className={`p-2 ${
-                        view === 'timeline'
-                          ? 'bg-primary text-primary-foreground'
-                          : ''
-                      }`}
+                      className={`p-2 ${view === 'timeline' ? 'bg-primary text-primary-foreground' : ''}`}
                     >
                       <Clock size={18} />
                     </button>
                   </div>
+
+                  {/* Search Input */}
+                  {filterType === 'company' ? (
+                    <input
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      placeholder="Search jobs..."
+                      className="px-4 py-2 bg-card border rounded-lg max-w-xs w-full"
+                    />
+                  ) : (
+                    <input
+                      type="date"
+                      value={searchDate}
+                      onChange={(e) => setSearchDate(e.target.value)}
+                      className="px-4 py-2 bg-card border rounded-lg"
+                    />
+                  )}
+
+                  {/* Filter */}
+                  <select
+                    value={filterType}
+                    onChange={(e) => {
+                      setFilterType(e.target.value);
+                      setSearchText('');
+                      setSearchDate('');
+                    }}
+                    className="px-4 py-2 bg-card border rounded-lg"
+                  >
+                    <option value="company">Company / Role</option>
+                    <option value="date">Date Applied</option>
+                  </select>
+
+                  {/* Search Button */}
+                  <button
+                    onClick={applySearch}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg flex items-center gap-2"
+                  >
+                    {isSearching ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Search size={16} />
+                    )}
+                    Search
+                  </button>
+
+                  {/* Clear */}
+                  {appliedFilter && (
+                    <button
+                      onClick={clearSearch}
+                      className="px-3 py-2 border rounded-lg flex items-center gap-1"
+                    >
+                      <X size={16} />
+                      Clear
+                    </button>
+                  )}
 
                   {/* Add Job */}
                   <button
@@ -200,27 +252,18 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Views */}
+                {/* ===== CONTENT ===== */}
                 <AnimatePresence mode="wait">
                   {view === 'kanban' ? (
-                    <motion.div
-                      key="kanban"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex gap-6 overflow-x-auto pb-4"
-                    >
+                    <motion.div className="flex gap-6 overflow-x-auto pb-4">
                       {JOB_STATUSES.map((status) => {
-                        const list = processedJobs.filter(
-                          (j) => j.status === status
+                        const list = filteredJobs.filter(
+                          (job) => job.status === status
                         );
 
                         return (
-                          <div
-                            key={status}
-                            className="min-w-[280px] space-y-4"
-                          >
-                            <h2 className="font-semibold text-lg">
+                          <div key={status} className="min-w-[280px] space-y-4">
+                            <h2 className="font-semibold">
                               {status} ({list.length})
                             </h2>
 
@@ -233,7 +276,10 @@ export default function App() {
                                   job={job}
                                   onStatusChange={handleUpdateJob}
                                   onDelete={handleDeleteJob}
-                                  onEdit={setEditingJob}
+                                  onEdit={(job) => {
+                                    setEditingJob(job);
+                                    setIsModalOpen(true);
+                                  }}
                                 />
                               ))
                             )}
@@ -243,10 +289,13 @@ export default function App() {
                     </motion.div>
                   ) : (
                     <TimelineView
-                      jobs={processedJobs}
+                      jobs={filteredJobs}
                       onStatusChange={handleUpdateJob}
                       onDelete={handleDeleteJob}
-                      onEdit={setEditingJob}
+                      onEdit={(job) => {
+                        setEditingJob(job);
+                        setIsModalOpen(true);
+                      }}
                     />
                   )}
                 </AnimatePresence>
@@ -258,9 +307,8 @@ export default function App() {
 
       <Footer />
 
-      {/* Modals */}
       <JobModal
-        isOpen={isModalOpen || !!editingJob}
+        isOpen={isModalOpen}
         job={editingJob}
         onClose={() => {
           setIsModalOpen(false);
@@ -268,18 +316,18 @@ export default function App() {
         }}
         onSubmit={
           editingJob
-            ? (updates) =>
-                handleUpdateJob(editingJob.id, updates)
+            ? (updates) => handleUpdateJob(editingJob.id, updates)
             : handleAddJob
         }
       />
 
       <SignInModal
-        isOpen={isSignInModalOpen}
-        onClose={() => setIsSignInModalOpen(false)}
+        isOpen={false}
         onGoogleSignIn={signInWithGoogle}
         onGithubSignIn={signInWithGitHub}
       />
     </div>
   );
 }
+
+export default App;
