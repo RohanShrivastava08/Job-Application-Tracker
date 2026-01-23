@@ -5,11 +5,6 @@ import { useState, useEffect } from 'react';
 
 import { JOB_STATUSES } from '../constants/jobStatuses';
 
-/**
- * JobModal
- * - Single source of job creation & editing
- * - Always emits clean, normalized job objects
- */
 export default function JobModal({
   isOpen = false,
   onClose = () => {},
@@ -60,9 +55,6 @@ export default function JobModal({
     setTagInput('');
   };
 
-  /* -------------------------------- */
-  /* Helpers                          */
-  /* -------------------------------- */
   const addTag = () => {
     const value = tagInput.trim();
     if (!value) return;
@@ -82,9 +74,6 @@ export default function JobModal({
     }));
   };
 
-  /* -------------------------------- */
-  /* Submit                           */
-  /* -------------------------------- */
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -268,9 +257,6 @@ export default function JobModal({
   );
 }
 
-/* -------------------------------- */
-/* Reusable Input                    */
-/* -------------------------------- */
 function Input({ label, value, onChange, required = false }) {
   return (
     <div>
