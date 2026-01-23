@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, LayoutGrid, Clock } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -17,8 +17,8 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
-import { JOB_STATUSES } from './constants/jobStatuses';
 
+import { JOB_STATUSES } from './constants/jobStatuses';
 
 const SORT_OPTIONS = [
   { label: 'Date Applied', value: 'date' },
@@ -35,8 +35,10 @@ function App() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [view, setView] = useState('kanban');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isDark, setIsDark] = useState(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -53,13 +55,14 @@ function App() {
           setJobs(fetchedJobs);
           navigate('/dashboard');
         } catch (err) {
-          console.error(err);
+          console.error('Failed to load jobs:', err);
           setJobs([]);
         }
       } else {
         setJobs([]);
         navigate('/');
       }
+
       setLoading(false);
     });
 
@@ -70,17 +73,34 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  const filteredJobs = jobs
-    .filter(({ company, role }) => {
-      const q = search.toLowerCase();
-      return company.toLowerCase().includes(q) || role.toLowerCase().includes(q);
-    })
-    .sort((a, b) => {
-      if (sortBy === 'date') return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sortBy === 'company') return a.company.localeCompare(b.company);
+  const filteredJobs = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    const searched = query.length
+      ? jobs.filter((job) => {
+          return (
+            job.company.toLowerCase().includes(query) ||
+            job.role.toLowerCase().includes(query)
+          );
+        })
+      : jobs;
+
+    const sorted = [...searched].sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.date) - new Date(a.date);
+      }
+      if (sortBy === 'company') {
+        return a.company.localeCompare(b.company);
+      }
       return 0;
     });
 
+    return sorted;
+  }, [jobs, search, sortBy]);
+
+  /* ----------------------------- */
+  /* CRUD handlers                 */
+  /* ----------------------------- */
   const handleAddJob = async (job) => {
     const updated = await addJob(user.uid, boardId, job);
     setJobs(updated);
@@ -107,10 +127,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header
-        isDark={isDark}
-        onThemeToggle={() => setIsDark(!isDark)}
-      />
+      <Header isDark={isDark} onThemeToggle={() => setIsDark(!isDark)} />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -124,52 +141,67 @@ function App() {
 
                 {/* Controls */}
                 <div className="flex flex-wrap items-center gap-4 mb-8">
-                  <div className="relative max-w-xs w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" size={18} />
+                  {/* Search */}
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search
+                      className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
+                      size={18}
+                    />
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search jobs..."
-                      className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg"
+                      placeholder="Search by company or role..."
+                      className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
 
+                  {/* Sort */}
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 bg-card border rounded-lg"
+                    className="px-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    {SORT_OPTIONS.map(o => (
+                    {SORT_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
                         Sort by: {o.label}
                       </option>
                     ))}
                   </select>
 
-                  <div className="flex border rounded-lg overflow-hidden">
+                  {/* View toggle */}
+                  <div className="flex border rounded-lg overflow-hidden bg-card">
                     <button
                       onClick={() => setView('kanban')}
-                      className={`p-2 ${view === 'kanban' ? 'bg-primary text-primary-foreground' : ''}`}
+                      className={`p-2 ${
+                        view === 'kanban'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-foreground/5'
+                      }`}
                     >
                       <LayoutGrid size={18} />
                     </button>
                     <button
                       onClick={() => setView('timeline')}
-                      className={`p-2 ${view === 'timeline' ? 'bg-primary text-primary-foreground' : ''}`}
+                      className={`p-2 ${
+                        view === 'timeline'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-foreground/5'
+                      }`}
                     >
                       <Clock size={18} />
                     </button>
                   </div>
 
+                  {/* Add Job */}
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+                    className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
                   >
                     Add Job
                   </button>
                 </div>
 
-                {/* ✅ FIXED KANBAN LAYOUT */}
+                {/* Content */}
                 <AnimatePresence mode="wait">
                   {view === 'kanban' ? (
                     <motion.div
@@ -180,7 +212,9 @@ function App() {
                       className="flex gap-6 overflow-x-auto pb-4"
                     >
                       {JOB_STATUSES.map((status) => {
-                        const list = filteredJobs.filter(j => j.status === status);
+                        const list = filteredJobs.filter(
+                          (job) => job.status === status
+                        );
 
                         return (
                           <div
@@ -191,21 +225,19 @@ function App() {
                               {status} ({list.length})
                             </h2>
 
-                            <AnimatePresence>
-                              {list.length === 0 ? (
-                                <EmptyState status={status} />
-                              ) : (
-                                list.map(job => (
-                                  <JobCard
-                                    key={job.id}
-                                    job={job}
-                                    onStatusChange={handleUpdateJob}
-                                    onDelete={handleDeleteJob}
-                                    onEdit={setEditingJob}
-                                  />
-                                ))
-                              )}
-                            </AnimatePresence>
+                            {list.length === 0 ? (
+                              <EmptyState status={status} />
+                            ) : (
+                              list.map((job) => (
+                                <JobCard
+                                  key={job.id}
+                                  job={job}
+                                  onStatusChange={handleUpdateJob}
+                                  onDelete={handleDeleteJob}
+                                  onEdit={setEditingJob}
+                                />
+                              ))
+                            )}
                           </div>
                         );
                       })}
@@ -227,6 +259,7 @@ function App() {
 
       <Footer />
 
+      {/* Job Modal */}
       <JobModal
         isOpen={isModalOpen || !!editingJob}
         job={editingJob}
@@ -241,6 +274,7 @@ function App() {
         }
       />
 
+      {/* Auth Modal */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
