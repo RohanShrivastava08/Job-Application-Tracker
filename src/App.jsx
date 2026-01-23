@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, LayoutGrid, Clock } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -17,7 +17,6 @@ import EmptyState from './components/EmptyState';
 import SignInModal from './components/SignInModal';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
-
 import { JOB_STATUSES } from './constants/jobStatuses';
 
 const SORT_OPTIONS = [
@@ -25,7 +24,7 @@ const SORT_OPTIONS = [
   { label: 'Company Name', value: 'company' },
 ];
 
-function App() {
+export default function App() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
@@ -35,13 +34,11 @@ function App() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [view, setView] = useState('kanban');
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
-
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches
+  const [isDark, setIsDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
   );
   const [loading, setLoading] = useState(true);
 
@@ -51,11 +48,11 @@ function App() {
 
       if (currentUser) {
         try {
-          const fetchedJobs = await getJobs(currentUser.uid, boardId);
-          setJobs(fetchedJobs);
+          const fetched = await getJobs(currentUser.uid, boardId);
+          setJobs(fetched);
           navigate('/dashboard');
         } catch (err) {
-          console.error('Failed to load jobs:', err);
+          console.error(err);
           setJobs([]);
         }
       } else {
@@ -73,34 +70,33 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  const filteredJobs = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const processedJobs = useMemo(() => {
+    let result = [...jobs];
 
-    const searched = query.length
-      ? jobs.filter((job) => {
-          return (
-            job.company.toLowerCase().includes(query) ||
-            job.role.toLowerCase().includes(query)
-          );
-        })
-      : jobs;
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((job) =>
+        [job.company, job.role, job.location]
+          .join(' ')
+          .toLowerCase()
+          .includes(q)
+      );
+    }
 
-    const sorted = [...searched].sort((a, b) => {
-      if (sortBy === 'date') {
-        return new Date(b.date) - new Date(a.date);
-      }
+    //  Sort
+    result.sort((a, b) => {
       if (sortBy === 'company') {
         return a.company.localeCompare(b.company);
       }
-      return 0;
+
+      // Default: date
+      return new Date(b.date) - new Date(a.date);
     });
 
-    return sorted;
+    return result;
   }, [jobs, search, sortBy]);
 
-  /* ----------------------------- */
-  /* CRUD handlers                 */
-  /* ----------------------------- */
   const handleAddJob = async (job) => {
     const updated = await addJob(user.uid, boardId, job);
     setJobs(updated);
@@ -127,7 +123,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header isDark={isDark} onThemeToggle={() => setIsDark(!isDark)} />
+      <Header
+        isDark={isDark}
+        onThemeToggle={() => setIsDark(!isDark)}
+      />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -142,16 +141,16 @@ function App() {
                 {/* Controls */}
                 <div className="flex flex-wrap items-center gap-4 mb-8">
                   {/* Search */}
-                  <div className="relative w-full sm:max-w-xs">
+                  <div className="relative max-w-xs w-full">
                     <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
                       size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
                     />
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search by company or role..."
-                      className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Search company, role, location..."
+                      className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg"
                     />
                   </div>
 
@@ -159,23 +158,23 @@ function App() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 bg-card border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="px-4 py-2 bg-card border rounded-lg"
                   >
-                    {SORT_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        Sort by: {o.label}
+                    {SORT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        Sort by: {opt.label}
                       </option>
                     ))}
                   </select>
 
                   {/* View toggle */}
-                  <div className="flex border rounded-lg overflow-hidden bg-card">
+                  <div className="flex border rounded-lg overflow-hidden">
                     <button
                       onClick={() => setView('kanban')}
                       className={`p-2 ${
                         view === 'kanban'
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-foreground/5'
+                          : ''
                       }`}
                     >
                       <LayoutGrid size={18} />
@@ -185,7 +184,7 @@ function App() {
                       className={`p-2 ${
                         view === 'timeline'
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-foreground/5'
+                          : ''
                       }`}
                     >
                       <Clock size={18} />
@@ -195,13 +194,13 @@ function App() {
                   {/* Add Job */}
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+                    className="ml-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg"
                   >
                     Add Job
                   </button>
                 </div>
 
-                {/* Content */}
+                {/* Views */}
                 <AnimatePresence mode="wait">
                   {view === 'kanban' ? (
                     <motion.div
@@ -212,14 +211,14 @@ function App() {
                       className="flex gap-6 overflow-x-auto pb-4"
                     >
                       {JOB_STATUSES.map((status) => {
-                        const list = filteredJobs.filter(
-                          (job) => job.status === status
+                        const list = processedJobs.filter(
+                          (j) => j.status === status
                         );
 
                         return (
                           <div
                             key={status}
-                            className="min-w-[280px] max-w-[280px] flex-shrink-0 space-y-4"
+                            className="min-w-[280px] space-y-4"
                           >
                             <h2 className="font-semibold text-lg">
                               {status} ({list.length})
@@ -244,7 +243,7 @@ function App() {
                     </motion.div>
                   ) : (
                     <TimelineView
-                      jobs={filteredJobs}
+                      jobs={processedJobs}
                       onStatusChange={handleUpdateJob}
                       onDelete={handleDeleteJob}
                       onEdit={setEditingJob}
@@ -259,7 +258,7 @@ function App() {
 
       <Footer />
 
-      {/* Job Modal */}
+      {/* Modals */}
       <JobModal
         isOpen={isModalOpen || !!editingJob}
         job={editingJob}
@@ -269,12 +268,12 @@ function App() {
         }}
         onSubmit={
           editingJob
-            ? (updates) => handleUpdateJob(editingJob.id, updates)
+            ? (updates) =>
+                handleUpdateJob(editingJob.id, updates)
             : handleAddJob
         }
       />
 
-      {/* Auth Modal */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
@@ -284,5 +283,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
