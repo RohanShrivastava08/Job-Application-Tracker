@@ -2,48 +2,97 @@ import { firestore } from '../firebase/firebase';
 import {
   collection,
   doc,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   query,
   orderBy,
+  limit,
+  startAfter,
   onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
 
-/* Helpers */
+/* ---------------- Helpers ---------------- */
+
 const jobsCollection = (uid, boardId = 'default') =>
   collection(firestore, 'users', uid, 'boards', boardId, 'jobs');
 
-/* ------------------------------ */
-/* REALTIME JOB SUBSCRIPTION      */
-/* ------------------------------ */
-export const subscribeToJobs = (uid, boardId = 'default', callback) => {
+/* ---------------- One-time Fetch (BACKWARD SAFE) ---------------- */
+
+export const getJobs = async (
+  uid,
+  boardId = 'default',
+  pageSize = 500,
+  lastVisible = null
+) => {
+  if (!uid) return [];
+
+  try {
+    let q = query(
+      jobsCollection(uid, boardId),
+      orderBy('createdAt', 'desc'),
+      limit(pageSize)
+    );
+
+    if (lastVisible) {
+      q = query(
+        jobsCollection(uid, boardId),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastVisible),
+        limit(pageSize)
+      );
+    }
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error('getJobs failed:', error);
+    return [];
+  }
+};
+
+/* ---------------- Realtime Subscription ---------------- */
+
+export const subscribeToJobs = (
+  uid,
+  boardId = 'default',
+  onChange,
+  pageSize = 500
+) => {
   if (!uid) return () => {};
 
   const q = query(
     jobsCollection(uid, boardId),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'desc'),
+    limit(pageSize)
   );
 
-  return onSnapshot(
+  const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
       const jobs = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      callback(jobs);
+      onChange(jobs);
     },
     (error) => {
-      console.error('Realtime jobs error:', error);
+      console.error('Realtime jobs listener error:', error);
+      onChange([]);
     }
   );
+
+  return unsubscribe;
 };
 
-/* ------------------------------ */
-/* ADD JOB                        */
-/* ------------------------------ */
+/* ---------------- CRUD ---------------- */
+
 export const addJob = async (uid, boardId, job) => {
   if (!uid || !job) return;
 
@@ -59,9 +108,6 @@ export const addJob = async (uid, boardId, job) => {
   });
 };
 
-/* ------------------------------ */
-/* UPDATE JOB                     */
-/* ------------------------------ */
 export const updateJob = async (uid, boardId, jobId, updates) => {
   if (!uid || !jobId) return;
 
@@ -81,9 +127,6 @@ export const updateJob = async (uid, boardId, jobId, updates) => {
   });
 };
 
-/* ------------------------------ */
-/* DELETE JOB                     */
-/* ------------------------------ */
 export const deleteJob = async (uid, boardId, jobId) => {
   if (!uid || !jobId) return;
 
