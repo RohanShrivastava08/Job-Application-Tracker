@@ -3,13 +3,18 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { JOB_STATUSES } from '../constants/jobStatuses';
+/**
+ * Centralized job lifecycle
+ * Wishlist is default entry point
+ */
+const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected'];
 
 export default function JobModal({
   isOpen = false,
   onClose = () => {},
   onSubmit = () => {},
   job = null,
+  title = 'Add Job',
 }) {
   const [formData, setFormData] = useState({
     company: '',
@@ -17,15 +22,12 @@ export default function JobModal({
     location: '',
     date: new Date().toISOString().split('T')[0],
     status: 'Wishlist',
-    tags: [],
     notes: '',
   });
 
-  const [tagInput, setTagInput] = useState('');
-
-  /* -------------------------------- */
-  /* Sync form when editing            */
-  /* -------------------------------- */
+  /* ----------------------------- */
+  /* Load data when editing        */
+  /* ----------------------------- */
   useEffect(() => {
     if (job) {
       setFormData({
@@ -34,46 +36,23 @@ export default function JobModal({
         location: job.location || '',
         date: job.date || new Date().toISOString().split('T')[0],
         status: job.status || 'Wishlist',
-        tags: Array.isArray(job.tags) ? job.tags : [],
         notes: job.notes || '',
       });
     } else {
-      resetForm();
+      setFormData({
+        company: '',
+        role: '',
+        location: '',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Wishlist',
+        notes: '',
+      });
     }
   }, [job]);
 
-  const resetForm = () => {
-    setFormData({
-      company: '',
-      role: '',
-      location: '',
-      date: new Date().toISOString().split('T')[0],
-      status: 'Wishlist',
-      tags: [],
-      notes: '',
-    });
-    setTagInput('');
-  };
-
-  const addTag = () => {
-    const value = tagInput.trim();
-    if (!value) return;
-    if (formData.tags.includes(value)) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      tags: [...prev.tags, value],
-    }));
-    setTagInput('');
-  };
-
-  const removeTag = (tag) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((t) => t !== tag),
-    }));
-  };
-
+  /* ----------------------------- */
+  /* Submit                        */
+  /* ----------------------------- */
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -83,13 +62,10 @@ export default function JobModal({
       location: formData.location.trim(),
       date: formData.date,
       status: formData.status,
-      tags: formData.tags.map((t) => t.trim()),
       notes: formData.notes.trim(),
     };
 
     onSubmit(payload);
-
-    if (!job) resetForm();
   };
 
   return (
@@ -99,47 +75,75 @@ export default function JobModal({
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel
           as={motion.div}
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
+          exit={{ opacity: 0, scale: 0.95 }}
           className="w-full max-w-md bg-card rounded-xl shadow-xl p-6"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold">
-              {job ? 'Edit Job' : 'Add New Job'}
+              {job ? 'Edit Job' : title}
             </Dialog.Title>
+
             <button
               onClick={onClose}
               className="p-1 rounded-lg hover:bg-foreground/10"
+              aria-label="Close"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Company */}
-            <Input
-              label="Company"
-              value={formData.company}
-              onChange={(v) => setFormData({ ...formData, company: v })}
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Company
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.company}
+                onChange={(e) =>
+                  setFormData({ ...formData, company: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-background border rounded-lg"
+              />
+            </div>
 
             {/* Role */}
-            <Input
-              label="Role"
-              value={formData.role}
-              onChange={(v) => setFormData({ ...formData, role: v })}
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Role
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-background border rounded-lg"
+              />
+            </div>
 
             {/* Location */}
-            <Input
-              label="Location"
-              value={formData.location}
-              onChange={(v) => setFormData({ ...formData, location: v })}
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Location
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-background border rounded-lg"
+              />
+            </div>
 
             {/* Date */}
             <div>
@@ -148,6 +152,7 @@ export default function JobModal({
               </label>
               <input
                 type="date"
+                required
                 value={formData.date}
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
@@ -168,55 +173,12 @@ export default function JobModal({
                 }
                 className="w-full px-3 py-2 bg-background border rounded-lg"
               >
-                {JOB_STATUSES.map((status) => (
+                {STATUSES.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Tags
-              </label>
-
-              <div className="flex gap-2">
-                <input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addTag()}
-                  placeholder="Press Enter to add"
-                  className="flex-1 px-3 py-2 bg-background border rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={addTag}
-                  className="px-3 py-2 bg-primary text-primary-foreground rounded-lg"
-                >
-                  Add
-                </button>
-              </div>
-
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded-full"
-                    >
-                      #{tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Notes */}
@@ -231,6 +193,7 @@ export default function JobModal({
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-background border rounded-lg"
+                placeholder="Optional notes about this application"
               />
             </div>
 
@@ -239,36 +202,21 @@ export default function JobModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg hover:bg-foreground/10"
+                className="px-4 py-2 text-sm rounded-lg hover:bg-foreground/10"
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+                className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:opacity-90"
               >
-                {job ? 'Save Changes' : 'Add Job'}
+                {job ? 'Update Job' : 'Add Job'}
               </button>
             </div>
           </form>
         </Dialog.Panel>
       </div>
     </Dialog>
-  );
-}
-
-function Input({ label, value, onChange, required = false }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium mb-1">
-        {label}
-      </label>
-      <input
-        value={value}
-        required={required}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 bg-background border rounded-lg"
-      />
-    </div>
   );
 }
