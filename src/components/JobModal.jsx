@@ -3,14 +3,19 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected'];
+const STATUSES = [
+  'Wishlist',
+  'Applied',
+  'Interview',
+  'Offer',
+  'Rejected',
+];
 
 export default function JobModal({
   isOpen = false,
   onClose = () => {},
   onSubmit = () => {},
   job = null,
-  title = 'Add Job',
 }) {
   const [formData, setFormData] = useState({
     company: '',
@@ -32,16 +37,20 @@ export default function JobModal({
         notes: job.notes || '',
       });
     } else {
-      setFormData({
-        company: '',
-        role: '',
-        location: '',
-        date: new Date().toISOString().split('T')[0],
-        status: 'Wishlist',
-        notes: '',
-      });
+      resetForm();
     }
   }, [job]);
+
+  const resetForm = () => {
+    setFormData({
+      company: '',
+      role: '',
+      location: '',
+      date: new Date().toISOString().split('T')[0],
+      status: 'Wishlist',
+      notes: '',
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -56,26 +65,31 @@ export default function JobModal({
     };
 
     onSubmit(payload);
+
+    if (!job) {
+      resetForm();
+    }
   };
 
   return (
     <Dialog open={!!isOpen} onClose={onClose} className="relative z-50">
+      {/* Overlay */}
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
 
+      {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel
           as={motion.div}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-md bg-card rounded-xl shadow-xl p-6"
+          className="w-full max-w-md bg-card rounded-xl shadow-lg p-6"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold">
-              {job ? 'Edit Job' : title}
+              {job ? 'Edit Job' : 'Add Job'}
             </Dialog.Title>
-
             <button
               onClick={onClose}
               className="p-1 rounded-lg hover:bg-foreground/10"
@@ -174,7 +188,7 @@ export default function JobModal({
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Notes
+                Notes (optional)
               </label>
               <textarea
                 rows={3}
@@ -183,7 +197,6 @@ export default function JobModal({
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-background border rounded-lg"
-                placeholder="Optional notes about this application"
               />
             </div>
 
