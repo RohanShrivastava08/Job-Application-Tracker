@@ -18,11 +18,15 @@ const STATUS_COLORS = {
 };
 
 export default function Dashboard({ jobs }) {
- 
   if (!Array.isArray(jobs) || jobs.length === 0) {
     return (
-      <div className="bg-card border rounded-xl p-6 mb-10 text-center text-foreground/60">
-        No job applications yet. Add your first job to get started.
+      <div className="bg-card border rounded-2xl p-10 mb-12 text-center">
+        <p className="text-lg font-medium">
+          No applications yet
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Add your first job to start tracking progress.
+        </p>
       </div>
     );
   }
@@ -32,11 +36,11 @@ export default function Dashboard({ jobs }) {
     return acc;
   }, {});
 
-  for (const job of jobs) {
+  jobs.forEach((job) => {
     if (statusCount[job.status] !== undefined) {
       statusCount[job.status] += 1;
     }
-  }
+  });
 
   const totalApplications = jobs.length;
 
@@ -49,37 +53,62 @@ export default function Dashboard({ jobs }) {
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12"
+      className="space-y-10 mb-16"
     >
-      {/* STATS */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-5">
-          Applications Overview
-        </h2>
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-wide uppercase">
+            Dashboard Overview
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Snapshot of your job search progress
+          </p>
+        </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <StatCard label="Total" value={totalApplications} />
-
-          {JOB_STATUSES.map((status) => (
-            <StatCard
-              key={status}
-              label={status}
-              value={statusCount[status]}
-            />
-          ))}
+        <div className="text-left sm:text-right">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Total Applications
+          </p>
+          <p className="text-3xl font-bold">
+            {totalApplications}
+          </p>
         </div>
       </div>
 
-      {/* CHART */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-5">
-          Status Distribution
-        </h2>
+      {/* ================= STATS GRID ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <StatCard
+          label="Total"
+          value={totalApplications}
+          highlight
+        />
+
+        {JOB_STATUSES.map((status) => (
+          <StatCard
+            key={status}
+            label={status}
+            value={statusCount[status]}
+            color={STATUS_COLORS[status]}
+          />
+        ))}
+      </div>
+
+      {/* ================= CHART ================= */}
+      <div className="bg-card border rounded-2xl p-6">
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold uppercase tracking-wide">
+            Status Distribution
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Visual breakdown of applications by stage
+          </p>
+        </div>
 
         {pieData.length === 0 ? (
-          <p className="text-sm text-foreground/60 text-center mt-12">
+          <p className="text-sm text-muted-foreground text-center py-20">
             No data to visualize yet.
           </p>
         ) : (
@@ -91,8 +120,8 @@ export default function Dashboard({ jobs }) {
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={95}
+                    innerRadius={75}
+                    outerRadius={105}
                     paddingAngle={4}
                     dataKey="value"
                   >
@@ -108,8 +137,7 @@ export default function Dashboard({ jobs }) {
               </ResponsiveContainer>
             </div>
 
-            {/* Legend */}
-            <div className="flex flex-wrap justify-center gap-4 mt-4 text-sm">
+            <div className="flex flex-wrap justify-center gap-5 mt-4 text-xs">
               {pieData.map((item) => (
                 <div
                   key={item.name}
@@ -121,7 +149,7 @@ export default function Dashboard({ jobs }) {
                       backgroundColor: STATUS_COLORS[item.name],
                     }}
                   />
-                  <span className="text-foreground/70">
+                  <span className="text-muted-foreground">
                     {item.name}
                   </span>
                 </div>
@@ -134,15 +162,38 @@ export default function Dashboard({ jobs }) {
   );
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, color, highlight }) {
   return (
-    <div className="bg-background border rounded-lg p-4">
-      <p className="text-sm text-foreground/60">
+    <div
+      className={`rounded-xl border p-5 transition ${
+        highlight
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-card'
+      }`}
+    >
+      <p
+        className={`text-xs uppercase tracking-wide ${
+          highlight
+            ? 'text-primary-foreground/80'
+            : 'text-muted-foreground'
+        }`}
+      >
         {label}
       </p>
-      <p className="text-2xl font-semibold">
+
+      <p className="text-2xl font-semibold mt-1">
         {value}
       </p>
+
+      {!highlight && color && (
+        <div
+          className="w-full h-[3px] rounded-full mt-4"
+          style={{
+            backgroundColor: color,
+            opacity: 0.75,
+          }}
+        />
+      )}
     </div>
   );
 }

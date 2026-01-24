@@ -15,7 +15,7 @@ import SignInModal from '../components/SignInModal';
 import { signInWithGoogle, signInWithGitHub } from '../firebase/firebase';
 
 const SECTION_HEADING =
-  'text-3xl font-bold tracking-wide text-center';
+  'text-3xl font-bold tracking-wide text-center uppercase';
 
 export default function Home() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function Home() {
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-6xl font-bold tracking-tight"
+          className="text-4xl md:text-6xl font-extrabold tracking-tight"
         >
           JOB APPLICATION TRACKER
         </motion.h1>
@@ -64,45 +64,60 @@ export default function Home() {
       </section>
 
       {/* ================= PROBLEM ================= */}
-      <section className="px-6 max-w-4xl mx-auto mb-32 text-center">
-        <h2 className={`${SECTION_HEADING} mb-8`}>
+      <section className="px-6 max-w-5xl mx-auto mb-36">
+        <h2 className={`${SECTION_HEADING} mb-14`}>
           THE PROBLEM THIS SOLVES
         </h2>
 
-        <div className="border rounded-2xl bg-card p-8 space-y-4 text-muted-foreground">
-          <p>• Job applications scattered across portals and spreadsheets</p>
-          <p>• No clear visibility into progress or momentum</p>
-          <p>• Browser storage breaking with large datasets</p>
-          <p>• No structured way to reflect on outcomes</p>
+        <div className="grid md:grid-cols-2 gap-6">
+          {[
+            'Applications scattered across multiple platforms',
+            'No clear visibility into interview progress',
+            'Spreadsheets becoming unmanageable over time',
+            'Browser storage failing with large datasets',
+          ].map((problem, i) => (
+            <div
+              key={i}
+              className="rounded-xl border bg-card p-6 text-muted-foreground text-center"
+            >
+              {problem}
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ================= BUILT FOR REAL USAGE ================= */}
-      <section className="px-6 max-w-5xl mx-auto mb-32">
-        <h2 className={`${SECTION_HEADING} mb-12`}>
+      <section className="px-6 max-w-6xl mx-auto mb-36">
+        <h2 className={`${SECTION_HEADING} mb-14`}>
           BUILT FOR REAL USAGE
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-6 text-center">
-          <div className="border rounded-xl p-6 bg-card">
-            <Users className="mx-auto mb-3 text-primary" />
-            <p className="font-semibold">REAL USERS</p>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="rounded-2xl border bg-card p-8 text-center">
+            <Users className="mx-auto mb-4 text-primary" />
+            <p className="font-semibold uppercase mb-1">
+              Real Users
+            </p>
             <p className="text-sm text-muted-foreground">
               Actively storing job data in Firestore
             </p>
           </div>
 
-          <div className="border rounded-xl p-6 bg-card">
-            <Server className="mx-auto mb-3 text-primary" />
-            <p className="font-semibold">CLOUD-BACKED</p>
+          <div className="rounded-2xl border bg-card p-8 text-center">
+            <Server className="mx-auto mb-4 text-primary" />
+            <p className="font-semibold uppercase mb-1">
+              Cloud-backed
+            </p>
             <p className="text-sm text-muted-foreground">
               No dependency on browser or device storage
             </p>
           </div>
 
-          <div className="border rounded-xl p-6 bg-card">
-            <ShieldCheck className="mx-auto mb-3 text-primary" />
-            <p className="font-semibold">PRIVATE BY DESIGN</p>
+          <div className="rounded-2xl border bg-card p-8 text-center">
+            <ShieldCheck className="mx-auto mb-4 text-primary" />
+            <p className="font-semibold uppercase mb-1">
+              Private by Design
+            </p>
             <p className="text-sm text-muted-foreground">
               Each user sees only their own data
             </p>
@@ -111,68 +126,26 @@ export default function Home() {
       </section>
 
       {/* ================= VISUAL JOB TRACKING ================= */}
-      <section className="px-6 max-w-7xl mx-auto mb-36">
+      <section className="px-6 max-w-6xl mx-auto mb-40">
         <h2 className={`${SECTION_HEADING} mb-12`}>
           VISUAL JOB TRACKING
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            {
-              title: 'WISHLIST',
-              jobs: [{ company: 'Stripe', role: 'Frontend Engineer', location: 'Remote' }],
-            },
-            {
-              title: 'APPLIED',
-              jobs: [
-                { company: 'Google', role: 'Software Engineer', location: 'Bangalore' },
-                { company: 'Swiggy', role: 'Frontend Developer', location: 'Remote' },
-              ],
-            },
-            {
-              title: 'INTERVIEW',
-              jobs: [{ company: 'Razorpay', role: 'SDE-1', location: 'Bangalore' }],
-            },
-            {
-              title: 'OFFER',
-              jobs: [{ company: 'Startup X', role: 'React Developer', location: 'Remote' }],
-            },
-            {
-              title: 'REJECTED',
-              jobs: [{ company: 'Company Y', role: 'UI Engineer', location: 'Mumbai' }],
-            },
-          ].map((column) => (
-            <div
-              key={column.title}
-              className="bg-card border rounded-xl p-4 space-y-4"
-            >
-              <p className="text-xs font-semibold tracking-wide text-center text-muted-foreground">
-                {column.title}
-              </p>
-
-              {column.jobs.map((job, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-lg border bg-background p-3 shadow-sm"
-                >
-                  <p className="font-medium text-sm">{job.company}</p>
-                  <p className="text-xs text-muted-foreground">{job.role}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    📍 {job.location}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ))}
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <img
+            src="/screenshots/kanban-preview.png"
+            alt="Job Application Tracker Kanban View"
+            className="rounded-xl w-full"
+          />
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Static preview of how applications are organized visually.
+        <p className="text-center text-sm text-muted-foreground mt-4">
+          Static preview from the live application
         </p>
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section className="px-6 max-w-4xl mx-auto mb-32">
+      <section className="px-6 max-w-4xl mx-auto mb-36">
         <h2 className={`${SECTION_HEADING} mb-12`}>
           HOW IT WORKS
         </h2>
@@ -180,7 +153,7 @@ export default function Home() {
         <div className="space-y-6">
           {[
             'Sign in securely using Google or GitHub',
-            'Add job applications with company, role, location, and date',
+            'Add job applications with company and role details',
             'Move applications across stages as progress changes',
             'Search and filter as the list grows',
             'Maintain clarity throughout the job hunt',
@@ -196,7 +169,7 @@ export default function Home() {
       </section>
 
       {/* ================= CORE FEATURES ================= */}
-      <section className="px-6 max-w-6xl mx-auto mb-36">
+      <section className="px-6 max-w-6xl mx-auto mb-40">
         <h2 className={`${SECTION_HEADING} mb-12`}>
           CORE FEATURES
         </h2>
@@ -205,31 +178,35 @@ export default function Home() {
           {[
             {
               icon: LayoutGrid,
-              title: 'KANBAN TRACKING',
+              title: 'Kanban Tracking',
               desc: 'Clearly defined stages from Wishlist to Offer.',
             },
             {
               icon: Clock,
-              title: 'TIMELINE VIEW',
+              title: 'Timeline View',
               desc: 'Chronological visibility of your job search.',
             },
             {
               icon: Database,
-              title: 'CLOUD STORAGE',
-              desc: 'Data safely stored in Firestore.',
+              title: 'Cloud Storage',
+              desc: 'Job data stored safely in Firestore.',
             },
             {
               icon: Lock,
-              title: 'PRIVATE BY DESIGN',
+              title: 'Private by Design',
               desc: 'User-scoped authentication and access.',
             },
           ].map((f, i) => {
             const Icon = f.icon;
             return (
-              <div key={i} className="bg-card border rounded-xl p-6">
+              <div key={i} className="rounded-xl border bg-card p-6">
                 <Icon className="text-primary mb-4" size={26} />
-                <h3 className="font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
+                <h3 className="font-semibold mb-2 uppercase">
+                  {f.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {f.desc}
+                </p>
               </div>
             );
           })}
@@ -238,12 +215,12 @@ export default function Home() {
 
       {/* ================= CTA ================= */}
       <section className="px-6 max-w-5xl mx-auto mb-32">
-        <div className="bg-primary text-primary-foreground rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            START TRACKING APPLICATIONS PROPERLY
+        <div className="rounded-2xl bg-primary text-primary-foreground p-12 text-center">
+          <h2 className="text-3xl font-bold mb-4 uppercase">
+            Start Tracking Applications Properly
           </h2>
           <p className="mb-6 text-primary-foreground/90">
-            Built with real constraints and real usage in mind.
+            Built for real workflows, not demos.
           </p>
           <button
             onClick={openSignIn}
@@ -254,6 +231,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ================= SIGN IN ================= */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
