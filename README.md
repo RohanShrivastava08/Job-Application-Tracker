@@ -1,12 +1,5 @@
 # 📋 Job Application Tracker
 
-![Screenshot (98)](https://github.com/user-attachments/assets/56ce28c1-981c-41ab-8abb-66e0648838b5)
-
-![Screenshot (97)](https://github.com/user-attachments/assets/7d6b66bd-b4bf-407a-b375-d514744fc95f)
-
-![Screenshot (99)](https://github.com/user-attachments/assets/90561312-8389-4a9d-8387-f7ee00014dd5)
-
-
 - A polished, interactive, and intuitive job application tracking tool built using React, Vite + TypeScript, Tailwind CSS, and Framer Motion.
 
 - This project demonstrates a beautiful, real-world utility interface with delightful animations and smooth drag-and-drop interactions to manage your job hunt like a pro.
@@ -144,32 +137,6 @@ npm run dev
 
 
 ## 📸 Screenshots
-
-![Screenshot (105)](https://github.com/user-attachments/assets/4271025b-0276-487a-a8a5-37be37206a53)
-
-![Screenshot (104)](https://github.com/user-attachments/assets/b1b6cd0b-4079-4c87-a175-9362a16bb383)
-
-![Screenshot (103)](https://github.com/user-attachments/assets/9e4187f3-ce0f-441d-a6ab-34e285e3a304)
-
-![Screenshot (102)](https://github.com/user-attachments/assets/1c44bbc8-ba1b-442b-a1fe-11375099b773)
-
-![Screenshot (101)](https://github.com/user-attachments/assets/af926fad-fa70-4794-8642-7c0f5f48fa18)
-
-![Screenshot (100)](https://github.com/user-attachments/assets/653fca41-b90c-4004-99e9-817e1573d891)
-
-![Screenshot (99)](https://github.com/user-attachments/assets/90561312-8389-4a9d-8387-f7ee00014dd5)
-
-![Screenshot (98)](https://github.com/user-attachments/assets/56ce28c1-981c-41ab-8abb-66e0648838b5)
-
-![Screenshot (97)](https://github.com/user-attachments/assets/7d6b66bd-b4bf-407a-b375-d514744fc95f)
-
-![Screenshot (109)](https://github.com/user-attachments/assets/8df0f393-8150-4bf7-80e2-dd7ecc294861)
-
-![Screenshot (108)](https://github.com/user-attachments/assets/f073beb4-7b7f-4eed-8100-bc75b6de2a9e)
-
-![Screenshot (107)](https://github.com/user-attachments/assets/64e00deb-dc85-4975-9ba3-d97f4755d65b)
-
-![Screenshot (106)](https://github.com/user-attachments/assets/1e200ead-37a0-4f9f-85ec-8d9d7aa668c9)
 
 
 
