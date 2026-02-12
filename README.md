@@ -23,7 +23,7 @@
 
 - This project presents a sleek Job Application Tracker that allows users to organize and track job applications across different stages such as Wishlist, Applied, Interview, and Offer.
 
-- It features a drag-and-drop interface, beautiful animations, and responsive design — all aimed at making the job search process less overwhelming and more empowering.
+- It features a drag-and-drop interface, beautiful animations, and responsive design all aimed at making the job search process less overwhelming and more empowering.
 
 - Ideal for job seekers who want to stay on top of their progress with a modern and engaging dashboard.
 
@@ -137,7 +137,6 @@ npm run dev
 
 
 ## 📸 Screenshots
-
 
 
 ## 🤝 Contributing
