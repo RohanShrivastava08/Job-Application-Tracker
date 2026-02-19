@@ -7,6 +7,7 @@
 - This project demonstrates a beautiful, real-world utility interface with delightful animations and smooth drag-and-drop interactions to manage your job hunt like a pro.
 
 
+
 ## 📋 Table of Contents
 - Introduction
 - Features
@@ -21,6 +22,7 @@
 - Contact
 
 
+
 ## 📘 Introduction
 
 - This project presents a sleek Job Application Tracker that allows users to organize and track job applications across different stages such as Wishlist, Applied, Interview, and Offer.
@@ -28,6 +30,7 @@
 - It features a drag-and-drop interface, beautiful animations, and responsive design — all aimed at making the job search process less overwhelming and more empowering.
 
 - Ideal for job seekers who want to stay on top of their progress with a modern and engaging dashboard.
+
 
 
 ## ✨ Features
@@ -65,6 +68,7 @@
 
 ---
 
+
 ## 🛠 Tech Stack
 
 | Category | Technologies |
@@ -81,6 +85,7 @@
 | **Deployment** | Vercel |
 
 ---
+
 
 ## 📁 Project Structure
 
@@ -111,6 +116,7 @@ src/
 ```
 
 ---
+
 
 ## ⚡ Getting Started
 
@@ -158,6 +164,7 @@ VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 npm run dev
 ```
 
+
 ## 🚀 Usage
 - Add new job applications under the Wishlist column
 
@@ -166,6 +173,7 @@ npm run dev
 - Click job cards for details, and export timelines as PDFs
 
 - Smooth animations and responsive layout enhance the experience
+
 
 
 ## 📸 Screenshots
@@ -184,6 +192,7 @@ npm run preview
 
 ---
 
+
 ## 🖥 Usage
 
 1. **Sign In** — Click "Get Started" and authenticate with Google or GitHub
@@ -195,6 +204,7 @@ npm run preview
 7. **Toggle Theme** — Switch between dark and light mode from the header
 
 ---
+
 
 ## 🌐 Deployment
 
@@ -211,6 +221,7 @@ vercel
 Add your environment variables in the Vercel dashboard under **Settings → Environment Variables**.
 
 ---
+
 
 ## 🤝 Contributing
 
@@ -233,9 +244,12 @@ Contributions are welcome! Here's how to get started:
 
 ---
 
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
 
 ## 📞 Contact
 For any questions or suggestions, feel free to reach out:
