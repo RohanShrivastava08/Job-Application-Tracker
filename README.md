@@ -7,7 +7,6 @@
 - This project demonstrates a beautiful, real-world utility interface with delightful animations and smooth drag-and-drop interactions to manage your job hunt like a pro.
 
 
-
 ## 📋 Table of Contents
 
 Introduction
