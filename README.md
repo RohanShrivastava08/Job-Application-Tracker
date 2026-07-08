@@ -9,28 +9,17 @@
 
 ## 📋 Table of Contents
 
-Introduction
-
-Features
-
-Project Implementation Process
-
-File Structure
-
-Technology Stack
-
-Installation
-
-Usage
-
-Screenshots
-
-Contributing
-
-License
-
-Contact
-
+- Introduction
+- Features
+- Project Implementation Process
+- File Structure
+- Technology Stack
+- Installation
+- Usage
+- Screenshots
+- Contributing
+- License
+- Contact
 
 
 ## 📘 Introduction
